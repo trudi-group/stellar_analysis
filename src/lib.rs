@@ -1,6 +1,5 @@
 use fbas_analyzer::*;
 use wasm_bindgen::prelude::*;
-use web_sys::console;
 #[macro_use]
 extern crate serde_derive;
 
@@ -11,14 +10,14 @@ pub fn init_panic_hook() {
 
 #[derive(Serialize)]
 pub struct AnalysedValues {
-    minimal_quorums: Vec<Vec<NodeId>>,
+    minimal_quorums: Vec<Vec<String>>,
     minimal_quorums_size: usize,
     has_intersection: bool,
-    minimal_blocking_sets: Vec<Vec<NodeId>>,
+    minimal_blocking_sets: Vec<Vec<String>>,
     minimal_blocking_sets_size: usize,
-    minimal_splitting_sets: Vec<Vec<NodeId>>,
+    minimal_splitting_sets: Vec<Vec<String>>,
     minimal_splitting_sets_size: usize,
-    top_tier: Vec<NodeId>,
+    top_tier: Vec<String>,
     top_tier_size: usize,
 }
 
@@ -31,22 +30,22 @@ pub fn fbas_analysis(json_fbas: String, json_orgs: String) -> JsValue {
         .minimal_quorums()
         .merged_by_org(&orgs)
         .minimal_sets()
-        .into_vec_vec();
+        .into_pretty_vec_vec(&fbas, Some(&orgs));
     let minimal_quorums_size = analysis.minimal_quorums().len();
     let has_intersection = analysis.has_quorum_intersection();
     let minimal_blocking_sets = analysis
         .minimal_blocking_sets()
         .merged_by_org(&orgs)
         .minimal_sets()
-        .into_vec_vec();
+        .into_pretty_vec_vec(&fbas, Some(&orgs));
     let minimal_blocking_sets_size = analysis.minimal_blocking_sets().len();
     let minimal_splitting_sets = analysis
         .minimal_splitting_sets()
         .merged_by_org(&orgs)
         .minimal_sets()
-        .into_vec_vec();
+        .into_pretty_vec_vec(&fbas, Some(&orgs));
     let minimal_splitting_sets_size = analysis.minimal_splitting_sets().len();
-    let top_tier = analysis.top_tier().into_vec();
+    let top_tier = analysis.top_tier().into_pretty_vec(&fbas, Some(&orgs));
     let top_tier_size = analysis.top_tier().len();
 
     let analysed_values = AnalysedValues {
