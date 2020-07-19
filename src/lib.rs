@@ -45,8 +45,8 @@ pub fn fbas_analysis(json_fbas: String, json_orgs: String) -> JsValue {
         .minimal_sets()
         .into_pretty_vec_vec(&fbas, Some(&orgs));
     let minimal_splitting_sets_size = analysis.minimal_splitting_sets().len();
-    let top_tier = analysis.top_tier().into_pretty_vec(&fbas, Some(&orgs));
-    let top_tier_size = analysis.top_tier().len();
+    let top_tier = analysis.top_tier().merged_by_org(&orgs).into_pretty_vec(&fbas, Some(&orgs));
+    let top_tier_size = analysis.top_tier().merged_by_org(&orgs).len();
 
     let analysed_values = AnalysedValues {
         minimal_quorums,

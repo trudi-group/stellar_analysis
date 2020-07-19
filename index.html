@@ -2,44 +2,44 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-		<title>Fbas Analyzer</title>
+		<title>Stellar Analysis</title>
 		<style>
-body {
-	background-color: rgb(246, 245, 242);
-	font-family: times, sans-serif
-}
-header {
-	padding: 20px;
-}
-h1 {
-	margin-top: 0px;
-	margin-left: 20px;
-	padding-top: 30px;
-	padding-left: 30px;
-	padding-bottom: 20px;
-	background-color: rgb(186, 171, 144);
-}
-h2 {
-	margin-left: 50px;
-}
-h3 {
-	margin-left: 20px;
-}
-p {
-	padding-left: 50px;
-}
-.box {
-	display: block;
-	margin-left: 20px;
-	margin-top: -1em;
-	margin-bottom: 1em;
-	padding: 1em;
-	padding-left: 30px;
-	background-color: rgb(255, 255, 255);
-}
-code {
-	word-break: break-all;
-}
+			body {
+				background-color: rgb(246, 245, 242);
+				font-family: times, sans-serif
+			}
+			header {
+				padding: 20px;
+			}
+			h1 {
+				margin-top: 0px;
+				margin-left: 20px;
+				padding-top: 30px;
+				padding-left: 30px;
+				padding-bottom: 20px;
+				background-color: rgb(186, 171, 144);
+			}
+			h2 {
+				margin-left: 50px;
+			}
+			h3 {
+				margin-left: 20px;
+			}
+			p {
+				padding-left: 50px;
+			}
+			.box {
+				display: block;
+				margin-left: 20px;
+				margin-top: -1em;
+				margin-bottom: 1em;
+				padding: 1em;
+				padding-left: 30px;
+				background-color: rgb(255, 255, 255);
+			}
+			code {
+				word-break: break-all;
+			}
 		</style>
 	</head>
 	<body>
@@ -67,16 +67,146 @@ code {
 		<body>	
 			<label for="date">Date:</label>
 			<input type="date" id="date" name="date"><br><br>
-			<button id="submit-btn" type="button" onclick="call_stellarbeat()">
+			<button id="submit-btn" type="button" onclick="call_stellarbeat_on_input()">
 				Submit
 			</button>
+			<p>
+			The following plots use nodes and organizations data from <a href="https://stellarbeat.io">stellarbeat.io</a>.
+			For each analyzed network snapshot, they show the size of the top tier, the mean, minimum and maximum of all minimal blocking set sizes, and the mean, minimum and maximum of all minimal splitting set sizes.
+			</p>
+			<canvas id="daily_chart_merged_by_org"></canvas>
+			<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
+			<script src="https://d3js.org/d3.v5.min.js"></script>
+			<script charset="utf-8">
+
+				make_chart_from_csv_url('daily_chart_merged_by_org', 'stellarbeat_daily_merged_by_org.csv');
+
+  function make_chart_from_csv_url(canvas_id, csv_url) {
+	d3.csv(csv_url).then(function(csv_data) { make_chart_from_csv_data(canvas_id, csv_data); });
+  }
+
+  function make_chart_from_csv_data(canvas_id, csv_data) {
+
+	Chart.defaults.global.defaultColor = 'rgba(0, 0, 0, 0)';
+
+	var colors = {
+	  tt:        'rgba(70, 105, 90, 1)',
+	  mbs:       'rgba(35, 90, 130, 1)',
+	  mbs_light: 'rgba(35, 90, 130, 0.35)',
+	  mss:       'rgba(190, 85, 45, 1)',
+	  mss_light: 'rgba(190, 85, 45, 0.35)'
+	};
+
+	var chart_data = {
+	  labels: csv_data.map(function(d) {return d.label}),
+	  datasets: [{
+		data: csv_data.map(function(d) {return d.top_tier_size}),
+		label: '|top tier|',
+		borderColor: colors.tt,
+		steppedLine: true,
+		fill: -1
+	  }, {
+		data: csv_data.map(function(d) {return d.mbs_mean}),
+		label: 'mean(|minimal blocking sets|)',
+		borderColor: colors.mbs,
+		backgroundColor: colors.mbs_light,
+		steppedLine: true,
+		fill: -1
+	  }, {
+		data: csv_data.map(function(d) {return d.mbs_min}),
+		label: 'min(|minimal blocking sets|)',
+		borderWidth: 0,
+		backgroundColor: colors.mbs_light,
+		steppedLine: true,
+		fill: 1
+	  }, {
+		data: csv_data.map(function(d) {return d.mbs_max}),
+		label: 'max(|minimal blocking sets|)',
+		borderWidth: 0,
+		backgroundColor: colors.mbs_light,
+		steppedLine: true,
+		fill: 1
+	  }, {
+		data: csv_data.map(function(d) {return d.mss_mean}),
+		label: 'mean(|minimal splitting sets|)',
+		borderColor: colors.mss,
+		backgroundColor: colors.mss_light,
+		steppedLine: true,
+		fill: -1
+	  }, {
+		data: csv_data.map(function(d) {return d.mss_min}),
+		label: 'min(|minimal splitting sets|)',
+		borderWidth: 0,
+		backgroundColor: colors.mss_light,
+		steppedLine: true,
+		fill: 4
+	  }, {
+		data: csv_data.map(function(d) {return d.mss_max}),
+		label: 'max(|minimal splitting sets|)',
+		borderWidth: 0,
+		backgroundColor: colors.mss_light,
+		steppedLine: true,
+		fill: 4
+	  }]
+	};
+
+	var options = {
+	responsive: true,
+	  scales: {
+		yAxes: [{
+		  ticks: {
+			beginAtZero: true,
+		  }
+		}]
+	  },
+	  elements: {
+		point: {
+		  radius: 0,
+		  hitRadius: 5
+		},
+	  },
+	  legend: {
+		labels: {
+			 filter: function(legendItem, data) {
+				  return !legendItem.text.startsWith('min') && !legendItem.text.startsWith('max')
+			 }
+		}
+	  }
+	};
+
+	var ctx = document.getElementById(canvas_id).getContext('2d');
+
+	var chart = new Chart(ctx, {
+	  type: 'line',
+	  data: chart_data,
+	  options: options
+	});
+	document.getElementById(canvas_id).onclick = function(evt) {
+	  var activePoint = chart.getElementAtEvent(event);
+
+		// make sure click was on an actual point
+		  if (activePoint.length > 0) {
+				var clickedDatasetIndex = activePoint[0]._datasetIndex;
+				var clickedElementindex = activePoint[0]._index;
+				var label = chart.data.labels[clickedElementindex];
+				var value = chart.data.datasets[clickedDatasetIndex].data[clickedElementindex];     
+				console.log("Clicked: " + label + " - " + value);
+				call_stellarbeat_on_click(label);
+			}
+	};
+  }
+			</script>															  
 			<div id="text-id"></div>
 			<script type="module"></script> 
 			</script>
 			<script type="module">
 				import init, {fbas_analysis} from './pkg/stellar_analysis.js';
+			async function initialise() {
+				await init();
+			}
+			initialise();
 		async function run(fbas, orgs) {
-			await init();
+			//await init();
 			var results = fbas_analysis(fbas, orgs)
 			console.log(results)
 			return results
@@ -84,7 +214,7 @@ code {
 		window.run = run
 			</script>
 			<script>
-				function call_stellarbeat() {
+				function call_stellarbeat_on_input() {
 					const date = document.getElementById('date');
 					var url = "https://api.stellarbeat.io/v2/all?at=" + date.value;
 					console.log(url);
@@ -99,7 +229,24 @@ code {
 						return xhr.response;
 					}
 				}
-window.call_stellarbeat = call_stellarbeat
+		window.call_stellarbeat_on_input = call_stellarbeat_on_input
+			</script>
+			<script>
+				function call_stellarbeat_on_click(clicked_date) {
+					var url = "https://api.stellarbeat.io/v2/all?at=" + clicked_date;
+					console.log(url);
+					var xhr = new XMLHttpRequest();
+					xhr.open("GET", url);
+					xhr.send();
+					xhr.onload = function() {
+						console.log(xhr.status);
+						console.log(xhr.response);
+						fbas = xhr.response;
+						prepare_fbas_string(fbas);
+						return xhr.response;
+					}
+				}
+		window.call_stellarbeat_on_click = call_stellarbeat_on_click
 			</script>
 			<script>
 				function prepare_fbas_string(text) {
@@ -117,10 +264,11 @@ window.call_stellarbeat = call_stellarbeat
 			</script>
 			<script>
 				const div = document.getElementById('text-id');
-function write_to_div(text) {
-	div.innerHTML = div.innerHTML + "<br>" + text;	
-}
-window.write_to_div = write_to_div
+				function write_to_div(text) {
+					div.innerHTML = div.innerHTML + "<br>" + text;
+					div.innerHTML = div.innerHTML + "<br>";
+				}
+		window.write_to_div = write_to_div
 			</script>
 			<script>
 				function log_results(results) {
@@ -148,7 +296,7 @@ window.write_to_div = write_to_div
 
 					write_to_div("There is a total of " + results.top_tier_size + " distinct nodes involved in all of these sets (this is the \"top tier\")." );
 				}
-window.log_results = log_results
+		window.log_results = log_results
 			</script>
 		</body>
 </html>
