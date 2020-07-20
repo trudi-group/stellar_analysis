@@ -70,8 +70,8 @@
 			<button id="submit-btn" type="button" onclick="call_stellarbeat_on_input()">
 				Submit
 			</button>
-			<input name="to_merge" id=merge_box type="checkbox" checked=checked>
-			<label for="to_merge"> Merge organizations</label><br>
+			<input name="to_merge" id=merge_box type="checkbox" checked=checked onclick="make_chart_from_csv_url('daily_chart_merged_by_org', 'stellarbeat_daily.csv')">
+			<label for="to_merge"> Merge by organizations</label><br>
 			<p>
 			The following plots use nodes and organizations data from <a href="https://stellarbeat.io">stellarbeat.io</a>.
 			For each analyzed network snapshot, they show the size of the top tier, the mean, minimum and maximum of all minimal blocking set sizes, and the mean, minimum and maximum of all minimal splitting set sizes.
@@ -80,10 +80,18 @@
 			<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
 			<script src="https://d3js.org/d3.v5.min.js"></script>
 			<script charset="utf-8">
-
-				make_chart_from_csv_url('daily_chart_merged_by_org', 'stellarbeat_daily_merged_by_org.csv');
+				var should_merge = document.getElementById("merge_box").checked;
+				make_chart_from_csv_url('daily_chart_merged_by_org', 'stellarbeat_daily.csv');
 
   function make_chart_from_csv_url(canvas_id, csv_url) {
+	const merged_title = "Merged by organization (nodes by the same organization count as 1)";
+	const raw_title = "Raw nodes (each physical node counts as 1)";
+	should_merge = document.getElementById("merge_box").checked;
+	/*if (should_merge) {
+		document.write(merged_title.bold());
+	} else {
+		document.write(raw_title.bold());
+	}*/
 	d3.csv(csv_url).then(function(csv_data) { make_chart_from_csv_data(canvas_id, csv_data); });
   }
 
@@ -99,7 +107,9 @@
 	  mss_light: 'rgba(190, 85, 45, 0.35)'
 	};
 
-	var chart_data = {
+	var chart_data = [];
+	if (should_merge == false) {
+	chart_data = {
 	  labels: csv_data.map(function(d) {return d.label}),
 	  datasets: [{
 		data: csv_data.map(function(d) {return d.top_tier_size}),
@@ -151,9 +161,75 @@
 		fill: 4
 	  }]
 	};
+	} else {
+	chart_data = {
+	  labels: csv_data.map(function(d) {return d.label}),
+	  datasets: [{
+		data: csv_data.map(function(d) {return d.orgs_top_tier_size}),
+		label: '|top tier|',
+		borderColor: colors.tt,
+		steppedLine: true,
+		fill: -1
+	  }, {
+		data: csv_data.map(function(d) {return d.orgs_mbs_mean}),
+		label: 'mean(|minimal blocking sets|)',
+		borderColor: colors.mbs,
+		backgroundColor: colors.mbs_light,
+		steppedLine: true,
+		fill: -1
+	  }, {
+		data: csv_data.map(function(d) {return d.orgs_mbs_min}),
+		label: 'min(|minimal blocking sets|)',
+		borderWidth: 0,
+		backgroundColor: colors.mbs_light,
+		steppedLine: true,
+		fill: 1
+	  }, {
+		data: csv_data.map(function(d) {return d.orgs_mbs_max}),
+		label: 'max(|minimal blocking sets|)',
+		borderWidth: 0,
+		backgroundColor: colors.mbs_light,
+		steppedLine: true,
+		fill: 1
+	  }, {
+		data: csv_data.map(function(d) {return d.orgs_mss_mean}),
+		label: 'mean(|minimal splitting sets|)',
+		borderColor: colors.mss,
+		backgroundColor: colors.mss_light,
+		steppedLine: true,
+		fill: -1
+	  }, {
+		data: csv_data.map(function(d) {return d.orgs_mss_min}),
+		label: 'min(|minimal splitting sets|)',
+		borderWidth: 0,
+		backgroundColor: colors.mss_light,
+		steppedLine: true,
+		fill: 4
+	  }, {
+		data: csv_data.map(function(d) {return d.orgs_mss_max}),
+		label: 'max(|minimal splitting sets|)',
+		borderWidth: 0,
+		backgroundColor: colors.mss_light,
+		steppedLine: true,
+		fill: 4
+	  }]
+	};
+
+	}
+	
+	var chart_text;
+	if (should_merge) {
+		chart_text = "Merged by organization (nodes by the same organization count as 1)"
+	} else {
+		chart_text = "Raw nodes (each physical node counts as 1)";
+	}
 
 	var options = {
 	responsive: true,
+	title: {
+		display: true,
+		text: chart_text,
+	},
 	  scales: {
 		yAxes: [{
 		  ticks: {
@@ -199,6 +275,14 @@
   }
 			</script>															  
 			<div id="text-id"></div>
+			<script>
+				const div = document.getElementById('text-id');
+	function write_to_div(text) {
+		div.innerHTML = div.innerHTML + "<br>" + text;
+		div.innerHTML = div.innerHTML + "<br>";
+	}
+	window.write_to_div = write_to_div
+			</script>
 			<script type="module"></script> 
 			</script>
 			<script type="module">
@@ -219,6 +303,7 @@
 					const date = document.getElementById('date');
 					var url = "https://api.stellarbeat.io/v2/all?at=" + date.value;
 					console.log(url);
+					const timestamp = date.value;
 					var xhr = new XMLHttpRequest();
 					xhr.open("GET", url);
 					xhr.send();
@@ -226,7 +311,7 @@
 						console.log(xhr.status);
 						console.log(xhr.response);
 						fbas = xhr.response;
-						prepare_fbas_string(fbas);
+						prepare_fbas_string(timestamp, fbas);
 						return xhr.response;
 					}
 				}
@@ -243,40 +328,33 @@ window.call_stellarbeat_on_input = call_stellarbeat_on_input
 						console.log(xhr.status);
 						console.log(xhr.response);
 						fbas = xhr.response;
-						prepare_fbas_string(fbas);
+						prepare_fbas_string(clicked_date, fbas);
 						return xhr.response;
 					}
 				}
 window.call_stellarbeat_on_click = call_stellarbeat_on_click
 			</script>
 			<script>
-				function prepare_fbas_string(text) {
+				function prepare_fbas_string(timestamp, text) {
 					var js_object = JSON.parse(text);
 					const stellarbeat_nodes = JSON.stringify(js_object[Object.keys(js_object)[0]]);
 					const stellarbeat_orga = JSON.stringify(js_object[Object.keys(js_object)[1]]);
 					console.log(text.length);
 					fbas_from_stellarbeat = stellarbeat_nodes;
-					const should_merge = document.getElementById("merge_box").checked;
+					var should_merge = document.getElementById("merge_box").checked;
 					console.log("to_merge: ", should_merge);
 					var promise_results = run(fbas_from_stellarbeat, stellarbeat_orga, should_merge);
 					var resolved_results = promise_results.then(function(value) {
-						log_results(value)
+						log_results(timestamp, value)
 					});
 					window.prepare_fbas_string = prepare_fbas_string
 				}
 			</script>
 			<script>
-				const div = document.getElementById('text-id');
-function write_to_div(text) {
-	div.innerHTML = div.innerHTML + "<br>" + text;
-	div.innerHTML = div.innerHTML + "<br>";
-}
-window.write_to_div = write_to_div
-			</script>
-			<script>
-				function log_results(results) {
+				function log_results(timestamp, results) {
 					div.innerHTML = "";
 
+					write_to_div("<b>Analysis of the Stellar Public Network on " + timestamp + "</b>");
 					write_to_div("minimal quorums: " + JSON.stringify(results.minimal_quorums, null, 2));
 					write_to_div("We found " + results.minimal_quorums_size + " minimal_quorums.");
 
