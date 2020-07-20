@@ -22,31 +22,46 @@ pub struct AnalysedValues {
 }
 
 #[wasm_bindgen]
-pub fn fbas_analysis(json_fbas: String, json_orgs: String) -> JsValue {
+pub fn fbas_analysis(json_fbas: String, json_orgs: String, merge: bool) -> JsValue {
     let fbas: Fbas = Fbas::from_json_str(&json_fbas);
     let orgs = Organizations::from_json_str(&json_orgs, &fbas);
     let analysis = Analysis::new(&fbas);
-    let minimal_quorums = analysis
-        .minimal_quorums()
-        .merged_by_org(&orgs)
+    let min_quorums = if merge {
+        analysis.minimal_quorums().merged_by_org(&orgs)
+    } else {
+        analysis.minimal_quorums()
+    };
+    let min_blocking_sets = if merge {
+        analysis.minimal_blocking_sets().merged_by_org(&orgs)
+    } else {
+        analysis.minimal_blocking_sets()
+    };
+    let min_splitting_sets = if merge {
+        analysis.minimal_splitting_sets().merged_by_org(&orgs)
+    } else {
+        analysis.minimal_splitting_sets()
+    };
+    let top = if merge {
+        analysis.top_tier().merged_by_org(&orgs)
+    } else {
+        analysis.top_tier()
+    };
+
+    let minimal_quorums = min_quorums
         .minimal_sets()
         .into_pretty_vec_vec(&fbas, Some(&orgs));
-    let minimal_quorums_size = analysis.minimal_quorums().len();
+    let minimal_quorums_size = minimal_quorums.len();
     let has_intersection = analysis.has_quorum_intersection();
-    let minimal_blocking_sets = analysis
-        .minimal_blocking_sets()
-        .merged_by_org(&orgs)
+    let minimal_blocking_sets = min_blocking_sets
         .minimal_sets()
         .into_pretty_vec_vec(&fbas, Some(&orgs));
-    let minimal_blocking_sets_size = analysis.minimal_blocking_sets().len();
-    let minimal_splitting_sets = analysis
-        .minimal_splitting_sets()
-        .merged_by_org(&orgs)
+    let minimal_blocking_sets_size = minimal_blocking_sets.len();
+    let minimal_splitting_sets = min_splitting_sets
         .minimal_sets()
         .into_pretty_vec_vec(&fbas, Some(&orgs));
-    let minimal_splitting_sets_size = analysis.minimal_splitting_sets().len();
-    let top_tier = analysis.top_tier().merged_by_org(&orgs).into_pretty_vec(&fbas, Some(&orgs));
-    let top_tier_size = analysis.top_tier().merged_by_org(&orgs).len();
+    let minimal_splitting_sets_size = minimal_splitting_sets.len();
+    let top_tier = top.into_pretty_vec(&fbas, Some(&orgs));
+    let top_tier_size = top_tier.len();
 
     let analysed_values = AnalysedValues {
         minimal_quorums,

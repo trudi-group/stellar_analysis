@@ -70,6 +70,8 @@
 			<button id="submit-btn" type="button" onclick="call_stellarbeat_on_input()">
 				Submit
 			</button>
+			<input name="to_merge" id=merge_box type="checkbox" checked=checked>
+			<label for="to_merge"> Merge organizations</label><br>
 			<p>
 			The following plots use nodes and organizations data from <a href="https://stellarbeat.io">stellarbeat.io</a>.
 			For each analyzed network snapshot, they show the size of the top tier, the mean, minimum and maximum of all minimal blocking set sizes, and the mean, minimum and maximum of all minimal splitting set sizes.
@@ -205,9 +207,8 @@
 				await init();
 			}
 			initialise();
-		async function run(fbas, orgs) {
-			//await init();
-			var results = fbas_analysis(fbas, orgs)
+		async function run(fbas, orgs, should_merge) {
+			var results = fbas_analysis(fbas, orgs, should_merge)
 			console.log(results)
 			return results
 		}
@@ -229,7 +230,7 @@
 						return xhr.response;
 					}
 				}
-		window.call_stellarbeat_on_input = call_stellarbeat_on_input
+window.call_stellarbeat_on_input = call_stellarbeat_on_input
 			</script>
 			<script>
 				function call_stellarbeat_on_click(clicked_date) {
@@ -246,7 +247,7 @@
 						return xhr.response;
 					}
 				}
-		window.call_stellarbeat_on_click = call_stellarbeat_on_click
+window.call_stellarbeat_on_click = call_stellarbeat_on_click
 			</script>
 			<script>
 				function prepare_fbas_string(text) {
@@ -255,7 +256,9 @@
 					const stellarbeat_orga = JSON.stringify(js_object[Object.keys(js_object)[1]]);
 					console.log(text.length);
 					fbas_from_stellarbeat = stellarbeat_nodes;
-					var promise_results = run(fbas_from_stellarbeat, stellarbeat_orga)
+					const should_merge = document.getElementById("merge_box").checked;
+					console.log("to_merge: ", should_merge);
+					var promise_results = run(fbas_from_stellarbeat, stellarbeat_orga, should_merge);
 					var resolved_results = promise_results.then(function(value) {
 						log_results(value)
 					});
@@ -264,11 +267,11 @@
 			</script>
 			<script>
 				const div = document.getElementById('text-id');
-				function write_to_div(text) {
-					div.innerHTML = div.innerHTML + "<br>" + text;
-					div.innerHTML = div.innerHTML + "<br>";
-				}
-		window.write_to_div = write_to_div
+function write_to_div(text) {
+	div.innerHTML = div.innerHTML + "<br>" + text;
+	div.innerHTML = div.innerHTML + "<br>";
+}
+window.write_to_div = write_to_div
 			</script>
 			<script>
 				function log_results(results) {
@@ -296,7 +299,7 @@
 
 					write_to_div("There is a total of " + results.top_tier_size + " distinct nodes involved in all of these sets (this is the \"top tier\")." );
 				}
-		window.log_results = log_results
+window.log_results = log_results
 			</script>
 		</body>
 </html>
