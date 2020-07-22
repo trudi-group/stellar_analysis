@@ -373,7 +373,7 @@ window.call_stellarbeat_on_click = call_stellarbeat_on_click
 
 					write_to_div("We found " + results.minimal_splitting_sets_size + " minimal splitting sets (minimal indispensable sets for safety). Control over any of these sets is sufficient to compromise safety by undermining the quorum intersection of at least two quorums.");
 
-					write_to_div("top_tier: "+ results.top_tier);
+					write_to_div("top_tier: "+ JSON.stringify(results.top_tier), null, 2);
 
 					write_to_div("There is a total of " + results.top_tier_size + " distinct nodes involved in all of these sets (this is the \"top tier\")." );
 				}
