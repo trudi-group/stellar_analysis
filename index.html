@@ -64,14 +64,23 @@
 		Interactive analyses of the <a href="https://www.stellar.org">Stellar</a> public network using <a href="https://github.com/wiberlin/fbas_analyzer"><code>fbas_analyzer</code></a><!--(commit <code>7fce4b34</code>)-->. The data used in the analysis is provided by  <a href="https://www.stellarbeat.io/">Stellarbeat</a>.
 		</p>
 		</head>
-		<body>	
+		<body>
 			<label for="date">Date:</label>
-			<input type="date" id="date" name="date"><br><br>
-			<button id="submit-btn" type="button" onclick="call_stellarbeat_on_input()">
-				Submit
-			</button>
+			<input type="date" id="date" name="date" min="2019-07-01"><br>
+			<label for="time">Time:</label>
+			<input type="time" id="time" name="time" value="00:00"><br>
 			<input name="to_merge" id=merge_box type="checkbox" checked=checked onclick="make_chart_from_csv_url('daily_chart_merged_by_org', 'stellarbeat_daily.csv'); maybe_change_analysis()">
 			<label for="to_merge"> Merge by organizations</label><br>
+			<button id="submit-btn" type="button" onclick="call_stellarbeat_on_input()">
+				Sumbit
+			</button>
+			<script>
+			window.onload = function() {
+				document.getElementById('date').value = '';
+				document.getElementById('time').value = '';
+				document.getElementById('merge_box').checked = true;
+			}
+			</script>
 			<p>
 			The following plots use nodes and organizations data from <a href="https://stellarbeat.io">stellarbeat.io</a>.
 			For each analyzed network snapshot, they show the size of the top tier, the mean, minimum and maximum of all minimal blocking set sizes, and the mean, minimum and maximum of all minimal splitting set sizes.
@@ -83,6 +92,7 @@
 				var current_nodes;
 				var current_orgs;
 				var timestamp;
+				var stellarbeat_timestamp; 
 				var should_merge = document.getElementById("merge_box").checked;
 				make_chart_from_csv_url('daily_chart_merged_by_org', 'stellarbeat_daily.csv');
 
@@ -299,9 +309,11 @@
 			<script>
 				function call_stellarbeat_on_input() {
 					const date = document.getElementById('date');
-					var url = "https://api.stellarbeat.io/v2/all?at=" + date.value;
+					const time = document.getElementById('time');
+					var url = "https://api.stellarbeat.io/v2/all?at=" + date.value + time.value;
 					console.log(url);
-					timestamp = date.value;
+					timestamp = date.value + "T" + time.value;
+					console.log("timestamp: ", timestamp );
 					var xhr = new XMLHttpRequest();
 					xhr.open("GET", url);
 					xhr.send();
@@ -317,9 +329,11 @@ window.call_stellarbeat_on_input = call_stellarbeat_on_input
 			</script>
 			<script>
 				function call_stellarbeat_on_click(clicked_date) {
-					var url = "https://api.stellarbeat.io/v2/all?at=" + clicked_date;
+					const time = document.getElementById('time');
+					var url = "https://api.stellarbeat.io/v2/all?at=" + clicked_date + time.value;
 					console.log(url);
-					timestamp = clicked_date;
+					timestamp = clicked_date + "T" + time.value;
+					console.log("timestamp: ", timestamp );
 					var xhr = new XMLHttpRequest();
 					xhr.open("GET", url);
 					xhr.send();
@@ -327,7 +341,7 @@ window.call_stellarbeat_on_input = call_stellarbeat_on_input
 						console.log(xhr.status);
 						console.log(xhr.response);
 						fbas = xhr.response;
-						prepare_fbas_string(clicked_date, fbas);
+						prepare_fbas_string(timestamp, fbas);
 						return xhr.response;
 					}
 				}
@@ -338,6 +352,7 @@ window.call_stellarbeat_on_click = call_stellarbeat_on_click
 					var js_object = JSON.parse(text);
 					const stellarbeat_nodes = JSON.stringify(js_object[Object.keys(js_object)[0]]);
 					const stellarbeat_orga = JSON.stringify(js_object[Object.keys(js_object)[1]]);
+					stellarbeat_timestamp = JSON.stringify(js_object[Object.keys(js_object)[2]]);
 					current_nodes = stellarbeat_nodes;
 					current_orgs = stellarbeat_orga;
 					console.log(text.length);
@@ -346,7 +361,7 @@ window.call_stellarbeat_on_click = call_stellarbeat_on_click
 					console.log("to_merge: ", should_merge);
 					var promise_results = run(fbas_from_stellarbeat, stellarbeat_orga, should_merge);
 					var resolved_results = promise_results.then(function(value) {
-						log_results(timestamp, value)
+						log_results(timestamp, stellarbeat_timestamp, value)
 					});
 					window.prepare_fbas_string = prepare_fbas_string
 				}
@@ -354,21 +369,19 @@ window.call_stellarbeat_on_click = call_stellarbeat_on_click
 			<script charset="utf-8">
 				function maybe_change_analysis() {
 					if (current_nodes || current_orgs) {
-						console.log("nodes:", current_nodes);
-						console.log("orgs:", current_orgs);
 						should_merge = document.getElementById("merge_box").checked;
 						var promise_results = run(current_nodes, current_orgs, should_merge);
 						var resolved_results = promise_results.then(function(value) {
-							log_results(timestamp, value)
+							log_results(timestamp, stellarbeat_timestamp, value)
 						});
 					}
 				}
 			</script>
 			<script>
-				function log_results(timestamp, results) {
+				function log_results(timestamp, stellarbeat_timestamp, results) {
 					div.innerHTML = "";
 
-					write_to_div("<b>Analysis of the Stellar Public Network on " + timestamp + "</b>");
+					write_to_div("<b>Requested analysis of the Stellar Public Network on " + timestamp + ". <br> The analyzed FBAS has the timestamp" + stellarbeat_timestamp + "." + "</b>");
 					write_to_div("minimal quorums: " + JSON.stringify(results.minimal_quorums, null, 2));
 					write_to_div("We found " + results.minimal_quorums_size + " minimal_quorums.");
 
