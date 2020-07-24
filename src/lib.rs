@@ -8,59 +8,47 @@ pub fn init_panic_hook() {
     console_error_panic_hook::set_once();
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Default)]
 pub struct AnalysedValues {
-    minimal_quorums: Vec<Vec<String>>,
+    minimal_quorums: String,
     minimal_quorums_size: usize,
     has_intersection: bool,
-    minimal_blocking_sets: Vec<Vec<String>>,
+    minimal_blocking_sets: String,
     minimal_blocking_sets_size: usize,
-    minimal_splitting_sets: Vec<Vec<String>>,
+    minimal_splitting_sets: String,
     minimal_splitting_sets_size: usize,
     top_tier: Vec<String>,
     top_tier_size: usize,
 }
 
 #[wasm_bindgen]
-pub fn fbas_analysis(json_fbas: String, json_orgs: String, merge: bool) -> JsValue {
+pub fn fbas_analysis(json_fbas: String, json_orgs: String, merge: bool, describe: bool) -> JsValue {
     let fbas: Fbas = Fbas::from_json_str(&json_fbas);
     let orgs = Organizations::from_json_str(&json_orgs, &fbas);
     let analysis = Analysis::new(&fbas);
-    let minimal_quorums = if merge {
+    let mqs = if merge {
         analysis
             .minimal_quorums()
             .merged_by_org(&orgs)
             .minimal_sets()
-            .into_pretty_vec_vec(&fbas, Some(&orgs))
     } else {
-        analysis
-            .minimal_quorums()
-            .minimal_sets()
-            .into_pretty_vec_vec(&fbas, None)
+        analysis.minimal_quorums().minimal_sets()
     };
-    let minimal_blocking_sets = if merge {
+    let mbs = if merge {
         analysis
             .minimal_blocking_sets()
             .merged_by_org(&orgs)
             .minimal_sets()
-            .into_pretty_vec_vec(&fbas, Some(&orgs))
     } else {
-        analysis
-            .minimal_blocking_sets()
-            .minimal_sets()
-            .into_pretty_vec_vec(&fbas, None)
+        analysis.minimal_blocking_sets().minimal_sets()
     };
-    let minimal_splitting_sets = if merge {
+    let mss = if merge {
         analysis
             .minimal_splitting_sets()
             .merged_by_org(&orgs)
             .minimal_sets()
-            .into_pretty_vec_vec(&fbas, Some(&orgs))
     } else {
-        analysis
-            .minimal_splitting_sets()
-            .minimal_sets()
-            .into_pretty_vec_vec(&fbas, None)
+        analysis.minimal_splitting_sets().minimal_sets()
     };
     let top_tier = if merge {
         analysis
@@ -69,6 +57,36 @@ pub fn fbas_analysis(json_fbas: String, json_orgs: String, merge: bool) -> JsVal
             .into_pretty_vec(&fbas, Some(&orgs))
     } else {
         analysis.top_tier().into_pretty_vec(&fbas, None)
+    };
+
+    let minimal_quorums = if !describe {
+        if !merge {
+            mqs.into_id_string()
+        } else {
+            mqs.into_pretty_string(&fbas, Some(&orgs))
+        }
+    } else {
+        serde_json::to_string(&mqs.describe()).expect("Error converting mqs to string")
+    };
+
+    let minimal_blocking_sets = if !describe {
+        if !merge {
+            mbs.into_id_string()
+        } else {
+            mbs.into_pretty_string(&fbas, Some(&orgs))
+        }
+    } else {
+        serde_json::to_string(&mbs.describe()).expect("Error converting mbs to string")
+    };
+
+    let minimal_splitting_sets = if !describe {
+        if !merge {
+            mss.into_id_string()
+        } else {
+            mss.into_pretty_string(&fbas, Some(&orgs))
+        }
+    } else {
+        serde_json::to_string(&mss.describe()).expect("Error converting mss to string")
     };
 
     let minimal_quorums_size = analysis.minimal_quorums().len();
