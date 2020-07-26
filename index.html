@@ -40,6 +40,40 @@
 			code {
 				word-break: break-all;
 			}
+			.collapsible {
+				background-color: rgb(186, 171, 144);
+				color: black;
+				cursor: pointer;
+				padding: 18px;
+				width: 100%;
+				border: none;
+				text-align: left;
+				outline: none;
+				font-size: 15px;
+			}
+
+			.active, .collapsible:hover {
+				background-color: rgb(186, 171, 144);
+			}
+
+			.collapsible:after {
+				content: '\02795'; /* Unicode character for "plus" sign (+) */
+				font-size: 13px;
+				color: white;
+				float: right;
+				margin-left: 5px;
+			}
+
+			.active:after {
+				  content: "\2796"; /* Unicode character for "minus" sign (-) */
+			}
+			.content {
+				padding: 0 18px;
+				max-height: 0;
+				overflow: scroll;
+				transition: max-height 0.2s ease-out;
+				background-color: rgb(246, 245, 242);
+			}
 		</style>
 	</head>
 	<body>
@@ -88,7 +122,9 @@
 			The following plots use nodes and organizations data from <a href="https://stellarbeat.io">stellarbeat.io</a>.
 			For each analyzed network snapshot, they show the size of the top tier, the mean, minimum and maximum of all minimal blocking set sizes, and the mean, minimum and maximum of all minimal splitting set sizes.
 			</p>
-			<canvas id="daily_chart_merged_by_org"></canvas>
+			<div style="height: 500px" width: "300px">
+				<canvas id="daily_chart_merged_by_org"></canvas>
+			</div>
 			<script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
 			<script src="https://d3js.org/d3.v5.min.js"></script>
 			<script charset="utf-8">
@@ -238,6 +274,7 @@
 
 	var options = {
 	responsive: true,
+	maintainAspectRatio: false,
 	title: {
 		display: true,
 		text: chart_text,
@@ -385,36 +422,113 @@ window.call_stellarbeat_on_click = call_stellarbeat_on_click
 				}
 			</script>
 			<script>
+				function create_buttons_in_div(title, results) {
+					var btn = document.createElement("button");
+					btn.setAttribute('class', 'collapsible');
+					var label = document.createTextNode(title);
+					btn.appendChild(label);
+
+					var output = document.getElementById("text-id");
+					output.appendChild(btn);
+
+					var inner_div = document.createElement("div");
+					inner_div.setAttribute('class', 'content');
+					output.appendChild(inner_div);
+
+					var paragraph = document.createElement("P");
+					paragraph.setAttribute('id', 'par');
+					console.log(typeof results);
+					for (i = 0; i < results.length; i++) {
+						var myDiv = document.createElement("div");
+						myDiv.id = 'myDiv';
+						myDiv.innerHTML = results[i] + "<br><br>";
+						document.createElement("br");
+						paragraph.appendChild(myDiv);
+					}
+					inner_div.appendChild(paragraph);
+				}
+			</script>
+			<script>
 				function log_results(timestamp, stellarbeat_timestamp, results) {
 					div.innerHTML = "";
 
 					write_to_div("<b>Requested analysis of the Stellar Public Network on " + timestamp + ". <br> The analyzed FBAS has the timestamp" + stellarbeat_timestamp + "." + "</b>");
+					should_describe = document.getElementById("describe_box").checked;
 					if (should_describe) {
+						console.log("writing to div");
 						write_to_div('"Set of sets"-type results are described as: <br> [#sets, #distinct_nodes, [min_set_size, max_set_size, mean_set_size],' 
 								+ ' [#sets_with_size_0, #sets_with_size_1, ..., #sets_with_max_set_size]]');
 					}
-
-					write_to_div("minimal quorums: " + JSON.stringify(results.minimal_quorums, null, 4).replace(/\\/g, ""));
-					write_to_div("We found " + results.minimal_quorums_size + " minimal_quorums.");
-
+					var mqs_output = [JSON.stringify(results.minimal_quorums, null, 4).replace(/\\/g, "").slice(1, -1)];
+					var mqs_size = "We found " + results.minimal_quorums_size + " minimal_quorums." 
+					var mqs_inter;
 					if (results.has_intersection) {
-						write_to_div("All quorums intersect 👍");
+						mqs_inter = "\nAll quorums intersect 👍";
 					} else {
-						write_to_div("Some quorums don't intersect 👎 Safety severely threatened for some nodes!<br>(Also, the remaining results here might not make much sense.)");
+						mqs_inter = "\nSome quorums don't intersect 👎 Safety severely threatened for some nodes!<br>(Also, the remaining results here might not make much sense.)";
 						;
 					}
 
-					write_to_div("blocking_sets: " +  JSON.stringify(results.minimal_blocking_sets, null, 4).replace(/\\/g, ""));
+					mqs_output.push(mqs_size);
+					mqs_output.push(mqs_inter);
+					create_buttons_in_div("minimal_quorums", mqs_output);
 
-					write_to_div("We found " + results.minimal_blocking_sets_size + " minimal blocking sets (minimal indispensable sets for global liveness). Control over any of these sets is sufficient to compromise the liveness of all nodes and to censor future transactions.");
+					var mbs_output = [JSON.stringify(results.minimal_blocking_sets, null, 4).replace(/\\/g, "").slice(1, -1)];
+					var mbs_size = "We found " + results.minimal_blocking_sets_size + " minimal blocking sets (minimal indispensable sets for global liveness). Control over any of these sets is sufficient to compromise the liveness of all nodes and to censor future transactions.";
+					mbs_output.push(mbs_size);
+					create_buttons_in_div("blocking_sets", mbs_output);
 
-					write_to_div("splitting sets: " + JSON.stringify(results.minimal_splitting_sets, null, 4).replace(/\\/g, ""));
+					var mss_output = [JSON.stringify(results.minimal_splitting_sets, null, 4).replace(/\\/g, "").slice(1, -1)];
+					mss_size = "We found " + results.minimal_splitting_sets_size + " minimal splitting sets (minimal indispensable sets for safety). Control over any of these sets is sufficient to compromise safety by undermining the quorum intersection of at least two quorums.";
+					mss_output.push(mss_size);
+					create_buttons_in_div("minimal_splitting_sets", mss_output);
 
-					write_to_div("We found " + results.minimal_splitting_sets_size + " minimal splitting sets (minimal indispensable sets for safety). Control over any of these sets is sufficient to compromise safety by undermining the quorum intersection of at least two quorums.");
+					var top_tier = [JSON.stringify(results.top_tier)];
+					var top_tier_size = "There is a total of " + results.top_tier_size + " distinct nodes involved in all of these sets (this is the \"top tier\")." 
+					top_tier.push(top_tier_size);
+					create_buttons_in_div("top_tier", top_tier);
 
-					write_to_div("top_tier: "+ JSON.stringify(results.top_tier), null, 4);
-
-					write_to_div("There is a total of " + results.top_tier_size + " distinct nodes involved in all of these sets (this is the \"top tier\")." );
+					var coll = document.getElementsByClassName("collapsible");
+				  	coll[0].addEventListener("click", function() {
+				      this.classList.toggle("active");
+					 	var content = this.nextElementSibling;
+					  	console.log("content: ", content);
+						if (content.style.maxHeight){
+						    content.style.maxHeight = null;
+						} else {
+						  	content.style.maxHeight = content.scrollHeight + "px";
+						}
+					});
+				  	coll[1].addEventListener("click", function() {
+				      this.classList.toggle("active");
+					 	var content = this.nextElementSibling;
+					  	console.log("content: ", content);
+						if (content.style.maxHeight){
+						    content.style.maxHeight = null;
+						} else {
+						  	content.style.maxHeight = content.scrollHeight + "px";
+						}
+					});
+				  	coll[2].addEventListener("click", function() {
+				      this.classList.toggle("active");
+					 	var content = this.nextElementSibling;
+					  	console.log("content: ", content);
+						if (content.style.maxHeight){
+						    content.style.maxHeight = null;
+						} else {
+						  	content.style.maxHeight = content.scrollHeight + "px";
+						}
+					});
+				  	coll[3].addEventListener("click", function() {
+				      this.classList.toggle("active");
+					 	var content = this.nextElementSibling;
+					  	console.log("content: ", content);
+						if (content.style.maxHeight){
+						    content.style.maxHeight = null;
+						} else {
+						  	content.style.maxHeight = content.scrollHeight + "px";
+						}
+					});
 				}
 window.log_results = log_results
 			</script>
