@@ -437,7 +437,6 @@ window.call_stellarbeat_on_click = call_stellarbeat_on_click
 
 					var paragraph = document.createElement("P");
 					paragraph.setAttribute('id', 'par');
-					console.log(typeof results);
 					for (i = 0; i < results.length; i++) {
 						var myDiv = document.createElement("div");
 						myDiv.id = 'myDiv';
@@ -454,6 +453,7 @@ window.call_stellarbeat_on_click = call_stellarbeat_on_click
 
 					write_to_div("<b>Requested analysis of the Stellar Public Network on " + timestamp + ". <br> The analyzed FBAS has the timestamp" + stellarbeat_timestamp + "." + "</b>");
 					should_describe = document.getElementById("describe_box").checked;
+					console.log("cache hit: ", results.cache_hit);
 					if (should_describe) {
 						console.log("writing to div");
 						write_to_div('"Set of sets"-type results are described as: <br> [#sets, #distinct_nodes, [min_set_size, max_set_size, mean_set_size],' 
@@ -492,7 +492,6 @@ window.call_stellarbeat_on_click = call_stellarbeat_on_click
 				  	coll[0].addEventListener("click", function() {
 				      this.classList.toggle("active");
 					 	var content = this.nextElementSibling;
-					  	console.log("content: ", content);
 						if (content.style.maxHeight){
 						    content.style.maxHeight = null;
 						} else {
@@ -502,7 +501,6 @@ window.call_stellarbeat_on_click = call_stellarbeat_on_click
 				  	coll[1].addEventListener("click", function() {
 				      this.classList.toggle("active");
 					 	var content = this.nextElementSibling;
-					  	console.log("content: ", content);
 						if (content.style.maxHeight){
 						    content.style.maxHeight = null;
 						} else {
@@ -512,7 +510,6 @@ window.call_stellarbeat_on_click = call_stellarbeat_on_click
 				  	coll[2].addEventListener("click", function() {
 				      this.classList.toggle("active");
 					 	var content = this.nextElementSibling;
-					  	console.log("content: ", content);
 						if (content.style.maxHeight){
 						    content.style.maxHeight = null;
 						} else {
@@ -522,7 +519,6 @@ window.call_stellarbeat_on_click = call_stellarbeat_on_click
 				  	coll[3].addEventListener("click", function() {
 				      this.classList.toggle("active");
 					 	var content = this.nextElementSibling;
-					  	console.log("content: ", content);
 						if (content.style.maxHeight){
 						    content.style.maxHeight = null;
 						} else {

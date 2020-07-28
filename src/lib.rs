@@ -24,6 +24,7 @@ pub struct AnalysedValues {
     minimal_splitting_sets_size: usize,
     top_tier: Vec<String>,
     top_tier_size: usize,
+    cache_hit: bool,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -73,9 +74,11 @@ fn fbas_has_been_analysed(fbas: &Fbas) -> Option<CustomResultsStruct> {
 
 #[wasm_bindgen]
 pub fn fbas_analysis(json_fbas: String, json_orgs: String, merge: bool, describe: bool) -> JsValue {
-    let fbas: Fbas = Fbas::from_json_str(&json_fbas);
+    let fbas: Fbas = Fbas::from_json_str(&json_fbas).to_standard_form();
     let orgs = Organizations::from_json_str(&json_orgs, &fbas);
+    let mut cache_hit = false;
     let analysis_results = if let Some(cached_results) = fbas_has_been_analysed(&fbas) {
+        cache_hit = true;
         cached_results
     } else {
         let new_results = do_analysis(&fbas);
@@ -157,6 +160,7 @@ pub fn fbas_analysis(json_fbas: String, json_orgs: String, merge: bool, describe
         minimal_splitting_sets_size,
         top_tier,
         top_tier_size,
+        cache_hit,
     };
     JsValue::from_serde(&analysed_values).unwrap()
 }
