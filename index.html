@@ -112,8 +112,14 @@
 			</button>
 			<script>
 			window.onload = function() {
+				var d = new Date();
+				var hour = d.getHours(),
+					    min  = d.getMinutes();
+				hour = (hour < 10 ? "0" : "") + hour;
+				min = (min < 10 ? "0" : "") + min;
+				var current_time = hour + ":" + min;
 				document.getElementById('date').value = '';
-				document.getElementById('time').value = '';
+				document.getElementById('time').value = current_time;
 				document.getElementById('merge_box').checked = true;
 				document.getElementById('describe_box').checked = false;
 			}
@@ -352,7 +358,7 @@
 				function call_stellarbeat_on_input() {
 					const date = document.getElementById('date');
 					const time = document.getElementById('time');
-					var url = "https://api.stellarbeat.io/v2/all?at=" + date.value + time.value;
+					var url = "https://api.stellarbeat.io/v2/all?at=" + date.value + "T" + time.value;
 					console.log(url);
 					timestamp = date.value + "T" + time.value;
 					console.log("timestamp: ", timestamp );
@@ -371,10 +377,12 @@ window.call_stellarbeat_on_input = call_stellarbeat_on_input
 			</script>
 			<script>
 				function call_stellarbeat_on_click(clicked_date) {
-					const time = document.getElementById('time');
-					var url = "https://api.stellarbeat.io/v2/all?at=" + clicked_date + time.value;
+					var time = "00" + ":" + "00";
+					var url = "https://api.stellarbeat.io/v2/all?at=" + clicked_date + "T" + time;
+					document.getElementById('date').value = clicked_date;
+					document.getElementById('time').value = time;
 					console.log(url);
-					timestamp = clicked_date + "T" + time.value;
+					timestamp = clicked_date + "T" + time;
 					console.log("timestamp: ", timestamp );
 					var xhr = new XMLHttpRequest();
 					xhr.open("GET", url);
