@@ -411,9 +411,14 @@ window.call_stellarbeat_on_click = call_stellarbeat_on_click
 					var should_describe = document.getElementById("describe_box").checked;
 					console.log("to_merge: ", should_merge);
 					console.log("to_describe: ", should_describe);
+					console.log("Starting timing..");
+					var start = performance.now();
 					var promise_results = run(fbas_from_stellarbeat, stellarbeat_orga, should_merge, should_describe);
+					var stop = performance.now();
+					const duration = stop - start;
+					const time_as_secs = duration / 1000;
 					var resolved_results = promise_results.then(function(value) {
-						log_results(timestamp, stellarbeat_timestamp, value)
+						log_results(timestamp, stellarbeat_timestamp, value, time_as_secs)
 					});
 					window.prepare_fbas_string = prepare_fbas_string
 				}
@@ -423,9 +428,13 @@ window.call_stellarbeat_on_click = call_stellarbeat_on_click
 					if (current_nodes || current_orgs) {
 						should_merge = document.getElementById("merge_box").checked;
 						should_describe = document.getElementById("describe_box").checked;
+						var start = performance.now();
 						var promise_results = run(current_nodes, current_orgs, should_merge, should_describe);
+						var stop = performance.now();
+						const duration = stop - start;
+						const time_as_secs = duration / 1000;
 						var resolved_results = promise_results.then(function(value) {
-							log_results(timestamp, stellarbeat_timestamp, value)
+							log_results(timestamp, stellarbeat_timestamp, value, time_as_secs)
 						});
 					}
 				}
@@ -457,10 +466,12 @@ window.call_stellarbeat_on_click = call_stellarbeat_on_click
 				}
 			</script>
 			<script>
-				function log_results(timestamp, stellarbeat_timestamp, results) {
+				function log_results(timestamp, stellarbeat_timestamp, results, duration) {
+
 					div.innerHTML = "";
 
 					write_to_div("<b>Requested analysis of the Stellar Public Network on " + timestamp + ". <br> The analyzed FBAS has the timestamp" + stellarbeat_timestamp + "." + "</b>");
+					write_to_div("Total duration of analysis: " + duration + " s");
 					should_describe = document.getElementById("describe_box").checked;
 					console.log("cache hit: ", results.cache_hit);
 					if (should_describe) {
