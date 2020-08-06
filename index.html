@@ -80,6 +80,41 @@
         transition: max-height 0.2s ease-out;
         background-color: rgb(246, 245, 242);
       }
+      .tooltip {
+        position: relative;
+        display: inline-block;
+      }
+
+      .tooltip .tooltiptext {
+        visibility: hidden;
+        width: 240px;
+        background-color: #555;
+        color: #fff;
+        text-align: center;
+        border-radius: 6px;
+        padding: 5px 0;
+        position: absolute;
+        z-index: 1;
+        bottom: 125%;
+        left: 50%;
+        margin-left: -60px;
+        opacity: 0;
+        transition: opacity 0.3s;
+      }
+      .tooltip .tooltiptext::after {
+        content: "";
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        margin-left: -5px;
+        border-width: 5px;
+        border-style: solid;
+        border-color: #555 transparent transparent transparent;
+      } 
+      .tooltip:hover .tooltiptext {
+       visibility: visible;
+       opacity: 1;
+      }
     </style>
   </head>
   <body>
@@ -457,11 +492,16 @@ window.call_stellarbeat_on_click = call_stellarbeat_on_click
         }
       </script>
       <script>
-        function create_buttons_in_div(title, results) {
+        function create_buttons_in_div(title, results, tooltip) {
           // TODO: fix fonts or return to button? (but making text selectable would be nice)
           // TODO: find way to separate title from "short results" visually
           var btn = document.createElement("div");
-          btn.setAttribute('class', 'collapsible');
+          btn.setAttribute('class', 'collapsible tooltip');
+          var tip = document.createElement('div');
+          tip.setAttribute('class', 'tooltiptext');
+          tip.innerHTML = tooltip;
+          btn.appendChild(tip);
+
           var label = document.createTextNode(title);
           btn.appendChild(label);
 
@@ -472,9 +512,6 @@ window.call_stellarbeat_on_click = call_stellarbeat_on_click
           inner_div.setAttribute('class', 'content');
           output.appendChild(inner_div);
 
-          // TODO: Perhaps we can make to pop-down menu contain *only* the raw data, and move
-          // the "documentation" ("Control over any of these sets...") into a
-          // tooltip or something like that?
           var paragraph = document.createElement("P");
           paragraph.setAttribute('id', 'par');
           for (i = 0; i < results.length; i++) {
@@ -510,25 +547,25 @@ window.call_stellarbeat_on_click = call_stellarbeat_on_click
             ;
           }
 
-          mqs_output.push(mqs_size);
-          mqs_output.push(mqs_inter);
-          create_buttons_in_div("quorums | We found X minimal quorums. All quorums intersect 👍", mqs_output); // TODO
+          var mqs_tooltip = "mqs_tooltip";
+          if (results.has_intersection) {
+             create_buttons_in_div("quorums | We found " + results.minimal_quorums_size +" minimal quorums. All quorums intersect 👍", mqs_output, mqs_tooltip); // TODO
+          } else {
+             create_buttons_in_div("quorums | We found" + results.minimal_quorums_size +" minimal quorums. Some quorums don't intersect 👎 Safety severely threatened for some nodes!(Also, the remaining results here might not make much sense.)", mqs_output, mqs_tooltip);
+      }
 
           var mbs_output = [JSON.stringify(results.minimal_blocking_sets, null, 4).replace(/\\/g, "").slice(1, -1)];
-          var mbs_size = "We found " + results.minimal_blocking_sets_size + " minimal blocking sets (minimal indispensable sets for global liveness). Control over any of these sets is sufficient to compromise the liveness of all nodes and to censor future transactions.";
-          mbs_output.push(mbs_size);
-          create_buttons_in_div("blocking sets | We found X minimal blocking sets. The smallest one has size Y.", mbs_output);
+          var mbs_tooltip = "Minimal indispensable sets for global liveness. Control over any of these sets is sufficient to compromise the liveness of all nodes and to censor future transactions.";
+          create_buttons_in_div("blocking sets | We found "+ results.minimal_blocking_sets_size + " minimal blocking sets. The smallest one has size " + results.smallest_blocking_set_size + ".", mbs_output, mbs_tooltip);
 
           var mss_output = [JSON.stringify(results.minimal_splitting_sets, null, 4).replace(/\\/g, "").slice(1, -1)];
-          mss_size = "We found " + results.minimal_splitting_sets_size + " minimal splitting sets (minimal indispensable sets for safety). Control over any of these sets is sufficient to compromise safety by undermining the quorum intersection of at least two quorums.";
-          mss_output.push(mss_size);
-          create_buttons_in_div("splitting sets | We found X minimal splitting sets. The smallest one has size Y.", mss_output);
+          var mss_tooltip = "Minimal indispensable sets for safety. Control over any of these sets is sufficient to compromise safety by undermining the quorum intersection of at least two quorums.";
+          create_buttons_in_div("splitting sets | We found " + results.minimal_splitting_sets_size + " minimal splitting sets. The smallest one has size " + results.smallest_splitting_set_size + ".", mss_output, mss_tooltip);
 
           var top_tier = [JSON.stringify(results.top_tier)];
-          var top_tier_size = "There is a total of " + results.top_tier_size + " distinct nodes involved in all of these sets (this is the \"top tier\")." 
-          top_tier.push(top_tier_size);
-          create_buttons_in_div("top tier 👑 | There are Z nodes in the top tier.", top_tier);
-          //write_to_div("<div style=\"padding-left: 20px; padding-top: 20px\">Total duration of analysis: " + duration + " s</div>");
+          var top_tier_size = "There is a total of " + results.top_tier_size + " " 
+          var tt_tooltip = "Distinct nodes involved in all of these sets (this is the \"top tier\")."; 
+          create_buttons_in_div("top tier 👑 | There are " + results.top_tier_size +  "nodes in the top tier.", top_tier, tt_tooltip);
           console.log("analysis duration (s): ", duration);
 
           var coll = document.getElementsByClassName("collapsible");
