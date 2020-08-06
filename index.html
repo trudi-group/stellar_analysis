@@ -3,119 +3,7 @@
   <head>
     <meta charset="utf-8">
     <title>Stellar Analysis</title>
-    <style>
-      body {
-        background-color: rgb(246, 245, 242);
-        font-family: times, sans-serif
-      }
-      header {
-        padding: 20px;
-      }
-      h1 {
-        margin-top: 0px;
-        margin-left: 20px;
-        padding-top: 30px;
-        padding-left: 30px;
-        padding-bottom: 20px;
-        background-color: rgb(186, 171, 144);
-      }
-      h2 {
-        margin-left: 50px;
-      }
-      h3 {
-        margin-left: 20px;
-      }
-      p {
-        padding-left: 50px;
-      }
-      .control-box {
-        padding-left: 50px;
-      }
-      #results-box {
-        padding: 20px;
-      }
-      .box {
-        display: block;
-        margin-left: 20px;
-        margin-top: -1em;
-        margin-bottom: 1em;
-        padding: 1em;
-        padding-left: 30px;
-        background-color: rgb(255, 255, 255);
-      }
-      code {
-        word-break: break-all;
-      }
-      .collapsible {
-        background-color: rgb(186, 171, 144);
-        color: black;
-        cursor: pointer;
-        padding: 18px;
-        width: 100%;
-        border: none;
-        text-align: left;
-        outline: none;
-        font-size: 15px;
-      }
-
-      .active, .collapsible:hover {
-        background-color: rgb(186, 171, 144);
-      }
-
-      .collapsible:after {
-        content: '\02795'; /* Unicode character for "plus" sign (+) */
-        font-size: 13px;
-        color: white;
-        float: right;
-        margin-left: 5px;
-      }
-
-      .active:after {
-          content: "\2796"; /* Unicode character for "minus" sign (-) */
-      }
-      .content {
-        padding: 0 18px;
-        max-height: 0;
-        overflow: scroll;
-        transition: max-height 0.2s ease-out;
-        background-color: rgb(246, 245, 242);
-      }
-      .tooltip {
-        position: relative;
-        display: inline-block;
-      }
-
-      .tooltip .tooltiptext {
-        visibility: hidden;
-        width: 240px;
-        background-color: #555;
-        color: #fff;
-        text-align: center;
-        border-radius: 6px;
-        padding: 5px 0;
-        position: absolute;
-        z-index: 1;
-        bottom: 125%;
-        left: 50%;
-        margin-left: -60px;
-        opacity: 0;
-        transition: opacity 0.3s;
-      }
-      .tooltip .tooltiptext::after {
-        content: "";
-        position: absolute;
-        top: 100%;
-        left: 50%;
-        margin-left: -5px;
-        border-width: 5px;
-        border-style: solid;
-        border-color: #555 transparent transparent transparent;
-      } 
-      .tooltip:hover .tooltiptext {
-       visibility: visible;
-       opacity: 1;
-      }
-    </style>
+	<link rel="stylesheet" href="layout.css" type="text/css">
   </head>
   <body>
     <header>
@@ -186,6 +74,7 @@
       </div>
       <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
       <script src="https://d3js.org/d3.v5.min.js"></script>
+	  <script type="text/javascript" src="graph.js"></script>
       <script charset="utf-8">
         var current_nodes;
         var current_orgs;
@@ -194,195 +83,8 @@
         var should_merge = document.getElementById("merge_box").checked;
         var should_describe = document.getElementById("describe_box").checked;
         make_chart_from_csv_url('daily_chart_merged_by_org', 'stellarbeat_daily.csv');
-
-  function make_chart_from_csv_url(canvas_id, csv_url) {
-  const merged_title = "Merged by organization (nodes by the same organization count as 1)";
-  const raw_title = "Raw nodes (each physical node counts as 1)";
-  should_merge = document.getElementById("merge_box").checked;
-  d3.csv(csv_url).then(function(csv_data) { make_chart_from_csv_data(canvas_id, csv_data); });
-  }
-
-  function make_chart_from_csv_data(canvas_id, csv_data) {
-
-  Chart.defaults.global.defaultColor = 'rgba(0, 0, 0, 0)';
-
-  var colors = {
-    tt:        'rgba(70, 105, 90, 1)',
-    mbs:       'rgba(35, 90, 130, 1)',
-    mbs_light: 'rgba(35, 90, 130, 0.35)',
-    mss:       'rgba(190, 85, 45, 1)',
-    mss_light: 'rgba(190, 85, 45, 0.35)'
-  };
-
-  var chart_data = [];
-  if (should_merge == false) {
-  chart_data = {
-    labels: csv_data.map(function(d) {return d.label}),
-    datasets: [{
-    data: csv_data.map(function(d) {return d.top_tier_size}),
-    label: '|top tier|',
-    borderColor: colors.tt,
-    steppedLine: true,
-    fill: -1
-    }, {
-    data: csv_data.map(function(d) {return d.mbs_mean}),
-    label: 'mean(|minimal blocking sets|)',
-    borderColor: colors.mbs,
-    backgroundColor: colors.mbs_light,
-    steppedLine: true,
-    fill: -1
-    }, {
-    data: csv_data.map(function(d) {return d.mbs_min}),
-    label: 'min(|minimal blocking sets|)',
-    borderWidth: 0,
-    backgroundColor: colors.mbs_light,
-    steppedLine: true,
-    fill: 1
-    }, {
-    data: csv_data.map(function(d) {return d.mbs_max}),
-    label: 'max(|minimal blocking sets|)',
-    borderWidth: 0,
-    backgroundColor: colors.mbs_light,
-    steppedLine: true,
-    fill: 1
-    }, {
-    data: csv_data.map(function(d) {return d.mss_mean}),
-    label: 'mean(|minimal splitting sets|)',
-    borderColor: colors.mss,
-    backgroundColor: colors.mss_light,
-    steppedLine: true,
-    fill: -1
-    }, {
-    data: csv_data.map(function(d) {return d.mss_min}),
-    label: 'min(|minimal splitting sets|)',
-    borderWidth: 0,
-    backgroundColor: colors.mss_light,
-    steppedLine: true,
-    fill: 4
-    }, {
-    data: csv_data.map(function(d) {return d.mss_max}),
-    label: 'max(|minimal splitting sets|)',
-    borderWidth: 0,
-    backgroundColor: colors.mss_light,
-    steppedLine: true,
-    fill: 4
-    }]
-  };
-  } else {
-  chart_data = {
-    labels: csv_data.map(function(d) {return d.label}),
-    datasets: [{
-    data: csv_data.map(function(d) {return d.orgs_top_tier_size}),
-    label: '|top tier|',
-    borderColor: colors.tt,
-    steppedLine: true,
-    fill: -1
-    }, {
-    data: csv_data.map(function(d) {return d.orgs_mbs_mean}),
-    label: 'mean(|minimal blocking sets|)',
-    borderColor: colors.mbs,
-    backgroundColor: colors.mbs_light,
-    steppedLine: true,
-    fill: -1
-    }, {
-    data: csv_data.map(function(d) {return d.orgs_mbs_min}),
-    label: 'min(|minimal blocking sets|)',
-    borderWidth: 0,
-    backgroundColor: colors.mbs_light,
-    steppedLine: true,
-    fill: 1
-    }, {
-    data: csv_data.map(function(d) {return d.orgs_mbs_max}),
-    label: 'max(|minimal blocking sets|)',
-    borderWidth: 0,
-    backgroundColor: colors.mbs_light,
-    steppedLine: true,
-    fill: 1
-    }, {
-    data: csv_data.map(function(d) {return d.orgs_mss_mean}),
-    label: 'mean(|minimal splitting sets|)',
-    borderColor: colors.mss,
-    backgroundColor: colors.mss_light,
-    steppedLine: true,
-    fill: -1
-    }, {
-    data: csv_data.map(function(d) {return d.orgs_mss_min}),
-    label: 'min(|minimal splitting sets|)',
-    borderWidth: 0,
-    backgroundColor: colors.mss_light,
-    steppedLine: true,
-    fill: 4
-    }, {
-    data: csv_data.map(function(d) {return d.orgs_mss_max}),
-    label: 'max(|minimal splitting sets|)',
-    borderWidth: 0,
-    backgroundColor: colors.mss_light,
-    steppedLine: true,
-    fill: 4
-    }]
-  };
-
-  }
-  
-  var chart_text;
-  if (should_merge) {
-    chart_text = "Merged by organization (nodes by the same organization count as 1)"
-  } else {
-    chart_text = "Raw nodes (each physical node counts as 1)";
-  }
-
-  var options = {
-  responsive: true,
-  maintainAspectRatio: false,
-  title: {
-    display: true,
-    text: chart_text,
-  },
-    scales: {
-    yAxes: [{
-      ticks: {
-      beginAtZero: true,
-      }
-    }]
-    },
-    elements: {
-    point: {
-      radius: 0,
-      hitRadius: 5
-    },
-    },
-    legend: {
-    labels: {
-       filter: function(legendItem, data) {
-          return !legendItem.text.startsWith('min') && !legendItem.text.startsWith('max')
-       }
-    }
-    }
-  };
-
-  var ctx = document.getElementById(canvas_id).getContext('2d');
-
-  if (window.chart) window.chart.destroy();
-  window.chart = new Chart(ctx, {
-    type: 'line',
-    data: chart_data,
-    options: options
-  });
-  document.getElementById(canvas_id).onclick = function(evt) {
-    var activePoint = chart.getElementAtEvent(event);
-
-    // make sure click was on an actual point
-      if (activePoint.length > 0) {
-        var clickedDatasetIndex = activePoint[0]._datasetIndex;
-        var clickedElementindex = activePoint[0]._index;
-        var label = chart.data.labels[clickedElementindex];
-        var value = chart.data.datasets[clickedDatasetIndex].data[clickedElementindex];     
-        console.log("Clicked: " + label + " - " + value);
-        call_stellarbeat_on_click(label);
-      }
-  };
-  }
       </script>
+
       <script>
         const div = document.getElementById('results-box');
   function write_to_div(text) {
@@ -391,6 +93,7 @@
   }
   window.write_to_div = write_to_div
       </script>
+
       <script type="module"></script> 
       </script>
       <script type="module">
@@ -544,13 +247,12 @@ window.call_stellarbeat_on_click = call_stellarbeat_on_click
             mqs_inter = "\nAll quorums intersect 👍";
           } else {
             mqs_inter = "\nSome quorums don't intersect 👎 Safety severely threatened for some nodes!<br>(Also, the remaining results here might not make much sense.)";
-            ;
           }
 
           var mqs_tooltip = "mqs_tooltip";
           if (results.has_intersection) {
-             create_buttons_in_div("quorums | We found " + results.minimal_quorums_size +" minimal quorums. All quorums intersect 👍", mqs_output, mqs_tooltip); // TODO
-          } else {
+             create_buttons_in_div("quorums | We found " + results.minimal_quorums_size +" minimal quorums. All quorums intersect 👍", mqs_output, mqs_tooltip); 
+		  } else {
              create_buttons_in_div("quorums | We found" + results.minimal_quorums_size +" minimal quorums. Some quorums don't intersect 👎 Safety severely threatened for some nodes!(Also, the remaining results here might not make much sense.)", mqs_output, mqs_tooltip);
       }
 
