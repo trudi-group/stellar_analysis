@@ -38,9 +38,6 @@
     <div class="control-box">
       <input type="date" id="date" name="date" min="2019-07-01">
       <input type="time" id="time" name="time" value="00:00">
-      <input name="to_describe" id=describe_box type="checkbox" checked=false hidden=true> <!-- TODO --> 
-      <!-- <label for="to_describe"> Describe (Output metrics instead of lists of node lists)</label><br> -->
-      <!-- TODO: we don't need this anymore? -->
       <button id="submit-btn" type="button" onclick="call_stellarbeat_on_input()">
         Analyze!
       </button>
@@ -51,11 +48,14 @@
               min  = d.getMinutes();
         hour = (hour < 10 ? "0" : "") + hour;
         min = (min < 10 ? "0" : "") + min;
+        var dd = String(d.getDate()).padStart(2, '0');
+		var mm = String(d.getMonth() + 1).padStart(2, '0');
+        var yyyy = d.getFullYear();
         var current_time = hour + ":" + min;
-        document.getElementById('date').value = '';
+        var today = new Date(yyyy + '-' + mm +'-' + dd);
+        document.getElementById('date').valueAsDate = today;
         document.getElementById('time').value = current_time;
         document.getElementById('merge_box').checked = true;
-        document.getElementById('describe_box').checked = false;
       }
       </script>
     </div>
@@ -81,7 +81,6 @@
         var timestamp;
         var stellarbeat_timestamp; 
         var should_merge = document.getElementById("merge_box").checked;
-        var should_describe = document.getElementById("describe_box").checked;
         make_chart_from_csv_url('daily_chart_merged_by_org', 'stellarbeat_daily.csv');
       </script>
 
@@ -102,8 +101,8 @@
         await init();
       }
       initialise();
-    async function run(fbas, orgs, should_merge, should_describe) {
-      var results = fbas_analysis(fbas, orgs, should_merge, should_describe)
+    async function run(fbas, orgs, should_merge) {
+      var results = fbas_analysis(fbas, orgs, should_merge)
       console.log(results)
       return results
     }
@@ -163,12 +162,9 @@ window.call_stellarbeat_on_click = call_stellarbeat_on_click
           console.log(text.length);
           fbas_from_stellarbeat = stellarbeat_nodes;
           var should_merge = document.getElementById("merge_box").checked;
-          var should_describe = document.getElementById("describe_box").checked;
           console.log("to_merge: ", should_merge);
-          console.log("to_describe: ", should_describe);
-          console.log("Starting timing..");
           var start = performance.now();
-          var promise_results = run(fbas_from_stellarbeat, stellarbeat_orga, should_merge, should_describe);
+          var promise_results = run(fbas_from_stellarbeat, stellarbeat_orga, should_merge);
           var stop = performance.now();
           const duration = stop - start;
           const time_as_secs = duration / 1000;
@@ -182,9 +178,8 @@ window.call_stellarbeat_on_click = call_stellarbeat_on_click
         function maybe_change_analysis() {
           if (current_nodes || current_orgs) {
             should_merge = document.getElementById("merge_box").checked;
-            should_describe = document.getElementById("describe_box").checked;
             var start = performance.now();
-            var promise_results = run(current_nodes, current_orgs, should_merge, should_describe);
+            var promise_results = run(current_nodes, current_orgs, should_merge);
             var stop = performance.now();
             const duration = stop - start;
             const time_as_secs = duration / 1000;
@@ -233,13 +228,7 @@ window.call_stellarbeat_on_click = call_stellarbeat_on_click
           div.innerHTML = "";
 
           write_to_div("<b>Results for " + timestamp + " (data from Stellarbeat has timestamp " + stellarbeat_timestamp.slice(1,-1) + ")" + "</b>");
-          should_describe = document.getElementById("describe_box").checked;
           console.log("cache hit: ", results.cache_hit);
-          if (should_describe) {
-            console.log("writing to div");
-            write_to_div('"Set of sets"-type results are described as: <br> [#sets, #distinct_nodes, [min_set_size, max_set_size, mean_set_size],' 
-                + ' [#sets_with_size_0, #sets_with_size_1, ..., #sets_with_max_set_size]]');
-          }
           var mqs_output = [JSON.stringify(results.minimal_quorums, null, 4).replace(/\\/g, "").slice(1, -1)];
           var mqs_size = "We found " + results.minimal_quorums_size + " minimal_quorums." 
           var mqs_inter;

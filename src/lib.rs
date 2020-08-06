@@ -79,7 +79,7 @@ fn fbas_has_been_analysed(fbas: &Fbas) -> Option<CustomResultsStruct> {
 }
 
 #[wasm_bindgen]
-pub fn fbas_analysis(json_fbas: String, json_orgs: String, merge: bool, describe: bool) -> JsValue {
+pub fn fbas_analysis(json_fbas: String, json_orgs: String, merge: bool) -> JsValue {
     let fbas: Fbas = Fbas::from_json_str(&json_fbas).to_standard_form();
     let orgs = Organizations::from_json_str(&json_orgs, &fbas);
     let mut cache_hit = false;
@@ -101,9 +101,7 @@ pub fn fbas_analysis(json_fbas: String, json_orgs: String, merge: bool, describe
     } else {
         analysis_results.minimal_quorums.minimal_sets()
     };
-    let minimal_quorums = if describe {
-        serde_json::to_string(&min_mqs.describe()).expect("Error converting mqs to string")
-    } else if merge {
+    let minimal_quorums = if merge {
         min_mqs.into_pretty_string(&fbas, Some(&orgs))
     } else {
         min_mqs.into_pretty_string(&fbas, None)
@@ -117,9 +115,7 @@ pub fn fbas_analysis(json_fbas: String, json_orgs: String, merge: bool, describe
     } else {
         analysis_results.minimal_blocking_sets.minimal_sets()
     };
-    let minimal_blocking_sets = if describe {
-        serde_json::to_string(&min_mbs.describe()).expect("Error converting mbs to string")
-    } else if merge {
+    let minimal_blocking_sets = if merge {
         min_mbs.into_pretty_string(&fbas, Some(&orgs))
     } else {
         min_mbs.into_pretty_string(&fbas, None)
@@ -133,9 +129,7 @@ pub fn fbas_analysis(json_fbas: String, json_orgs: String, merge: bool, describe
     } else {
         analysis_results.minimal_splitting_sets.minimal_sets()
     };
-    let minimal_splitting_sets = if describe {
-        serde_json::to_string(&min_mss.describe()).expect("Error converting mss to string")
-    } else if merge {
+    let minimal_splitting_sets = if merge {
         min_mss.into_pretty_string(&fbas, Some(&orgs))
     } else {
         min_mss.into_pretty_string(&fbas, None)
