@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8">
     <title>Stellar Analysis</title>
-	<link rel="stylesheet" href="layout.css" type="text/css">
+    <link rel="stylesheet" href="layout.css" type="text/css">
   </head>
   <body>
     <header>
@@ -49,7 +49,7 @@
         hour = (hour < 10 ? "0" : "") + hour;
         min = (min < 10 ? "0" : "") + min;
         var dd = String(d.getDate()).padStart(2, '0');
-		var mm = String(d.getMonth() + 1).padStart(2, '0');
+        var mm = String(d.getMonth() + 1).padStart(2, '0');
         var yyyy = d.getFullYear();
         var current_time = hour + ":" + min;
         var today = new Date(yyyy + '-' + mm +'-' + dd);
@@ -74,7 +74,7 @@
       </div>
       <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
       <script src="https://d3js.org/d3.v5.min.js"></script>
-	  <script type="text/javascript" src="graph.js"></script>
+      <script type="text/javascript" src="graph.js"></script>
       <script charset="utf-8">
         var current_nodes;
         var current_orgs;
@@ -190,17 +190,18 @@ window.call_stellarbeat_on_click = call_stellarbeat_on_click
         }
       </script>
       <script>
-        function create_buttons_in_div(title, results, tooltip) {
-          // TODO: fix fonts or return to button? (but making text selectable would be nice)
-          // TODO: find way to separate title from "short results" visually
-          var btn = document.createElement("div");
+        function create_buttons_in_div(title, short_results, results, tooltip) {
+          var btn = document.createElement("button");
           btn.setAttribute('class', 'collapsible tooltip');
           var tip = document.createElement('div');
           tip.setAttribute('class', 'tooltiptext');
           tip.innerHTML = tooltip;
           btn.appendChild(tip);
 
-          var label = document.createTextNode(title);
+          var main = document.createElement("b");
+          main.innerHTML = title;
+          btn.appendChild(main);
+          var label = document.createTextNode(short_results);
           btn.appendChild(label);
 
           var output = document.getElementById("results-box");
@@ -216,7 +217,7 @@ window.call_stellarbeat_on_click = call_stellarbeat_on_click
           copy_btn.setAttribute('class', 'copyButton');
           copy_btn.setAttribute('title', 'Copy');
           copy_btn.innerHTML = "&#x2398";
-		  paragraph.appendChild(copy_btn);
+          paragraph.appendChild(copy_btn);
           for (i = 0; i < results.length; i++) {
             var myDiv = document.createElement("div");
             myDiv.id = 'myDiv';
@@ -235,7 +236,6 @@ window.call_stellarbeat_on_click = call_stellarbeat_on_click
           write_to_div("<b>Results for " + timestamp + " (data from Stellarbeat has timestamp " + stellarbeat_timestamp.slice(1,-1) + ")" + "</b>");
           console.log("cache hit: ", results.cache_hit);
           var mqs_output = [JSON.stringify(results.minimal_quorums, null, 4).replace(/\\/g, "").slice(1, -1)];
-          var mqs_size = "We found " + results.minimal_quorums_size + " minimal_quorums." 
           var mqs_inter;
           if (results.has_intersection) {
             mqs_inter = "\nAll quorums intersect 👍";
@@ -245,23 +245,22 @@ window.call_stellarbeat_on_click = call_stellarbeat_on_click
 
           var mqs_tooltip = "mqs_tooltip";
           if (results.has_intersection) {
-             create_buttons_in_div("quorums | We found " + results.minimal_quorums_size +" minimal quorums. All quorums intersect 👍", mqs_output, mqs_tooltip); 
-		  } else {
-             create_buttons_in_div("quorums | We found" + results.minimal_quorums_size +" minimal quorums. Some quorums don't intersect 👎 Safety severely threatened for some nodes!(Also, the remaining results here might not make much sense.)", mqs_output, mqs_tooltip);
+             create_buttons_in_div("quorums |", " We found " + results.minimal_quorums_size +" minimal quorums. All quorums intersect 👍", mqs_output, mqs_tooltip); 
+          } else {
+             create_buttons_in_div("quorums |", " We found " + results.minimal_quorums_size +" minimal quorums. Some quorums don't intersect 👎 Safety severely threatened for some nodes!(Also, the remaining results here might not make much sense.)", mqs_output, mqs_tooltip);
       }
 
           var mbs_output = [JSON.stringify(results.minimal_blocking_sets, null, 4).replace(/\\/g, "").slice(1, -1)];
           var mbs_tooltip = "Minimal indispensable sets for global liveness. Control over any of these sets is sufficient to compromise the liveness of all nodes and to censor future transactions.";
-          create_buttons_in_div("blocking sets | We found "+ results.minimal_blocking_sets_size + " minimal blocking sets. The smallest one has size " + results.smallest_blocking_set_size + ".", mbs_output, mbs_tooltip);
+          create_buttons_in_div("blocking sets |", " We found "+ results.minimal_blocking_sets_size + " minimal blocking sets. The smallest one has size " + results.smallest_blocking_set_size + ".", mbs_output, mbs_tooltip);
 
           var mss_output = [JSON.stringify(results.minimal_splitting_sets, null, 4).replace(/\\/g, "").slice(1, -1)];
           var mss_tooltip = "Minimal indispensable sets for safety. Control over any of these sets is sufficient to compromise safety by undermining the quorum intersection of at least two quorums.";
-          create_buttons_in_div("splitting sets | We found " + results.minimal_splitting_sets_size + " minimal splitting sets. The smallest one has size " + results.smallest_splitting_set_size + ".", mss_output, mss_tooltip);
+          create_buttons_in_div("splitting sets |", " We found " + results.minimal_splitting_sets_size + " minimal splitting sets. The smallest one has size " + results.smallest_splitting_set_size + ".", mss_output, mss_tooltip);
 
           var top_tier = [JSON.stringify(results.top_tier)];
-          var top_tier_size = "There is a total of " + results.top_tier_size + " " 
           var tt_tooltip = "Distinct nodes involved in all of these sets (this is the \"top tier\")."; 
-          create_buttons_in_div("top tier 👑 | There are " + results.top_tier_size +  " nodes in the top tier.", top_tier, tt_tooltip);
+          create_buttons_in_div("top tier 👑 |", " There are " + results.top_tier_size +  " nodes in the top tier.", top_tier, tt_tooltip);
           console.log("analysis duration (s): ", duration);
 
           var coll = document.getElementsByClassName("collapsible");
@@ -303,48 +302,48 @@ window.call_stellarbeat_on_click = call_stellarbeat_on_click
           });
           var copy_btns = document.getElementsByClassName("copyButton");
             copy_btns[0].addEventListener("click", function() {
-			var textarea = document.createElement('textarea');
-			textarea.id = 'temp_element';
-			textarea.style.height = 0;
-			document.body.appendChild(textarea);
-			textarea.value = this.nextElementSibling.innerText;
-			var selector = document.querySelector('#temp_element');
-			selector.select();
-			document.execCommand('copy');
-			document.body.removeChild(textarea);
+            var textarea = document.createElement('textarea');
+            textarea.id = 'temp_element';
+            textarea.style.height = 0;
+            document.body.appendChild(textarea);
+            textarea.value = this.nextElementSibling.innerText;
+            var selector = document.querySelector('#temp_element');
+            selector.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
           });
             copy_btns[1].addEventListener("click", function() {
-			var textarea = document.createElement('textarea');
-			textarea.id = 'temp_element';
-			textarea.style.height = 0;
-			document.body.appendChild(textarea);
-			textarea.value = this.nextElementSibling.innerText;
-			var selector = document.querySelector('#temp_element');
-			selector.select();
-			document.execCommand('copy');
-			document.body.removeChild(textarea);
+            var textarea = document.createElement('textarea');
+            textarea.id = 'temp_element';
+            textarea.style.height = 0;
+            document.body.appendChild(textarea);
+            textarea.value = this.nextElementSibling.innerText;
+            var selector = document.querySelector('#temp_element');
+            selector.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
           });
             copy_btns[2].addEventListener("click", function() {
-			var textarea = document.createElement('textarea');
-			textarea.id = 'temp_element';
-			textarea.style.height = 0;
-			document.body.appendChild(textarea);
-			textarea.value = this.nextElementSibling.innerText;
-			var selector = document.querySelector('#temp_element');
-			selector.select();
-			document.execCommand('copy');
-			document.body.removeChild(textarea);
+            var textarea = document.createElement('textarea');
+            textarea.id = 'temp_element';
+            textarea.style.height = 0;
+            document.body.appendChild(textarea);
+            textarea.value = this.nextElementSibling.innerText;
+            var selector = document.querySelector('#temp_element');
+            selector.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
           });
             copy_btns[3].addEventListener("click", function() {
-			var textarea = document.createElement('textarea');
-			textarea.id = 'temp_element';
-			textarea.style.height = 0;
-			document.body.appendChild(textarea);
-			textarea.value = this.nextElementSibling.innerText;
-			var selector = document.querySelector('#temp_element');
-			selector.select();
-			document.execCommand('copy');
-			document.body.removeChild(textarea);
+            var textarea = document.createElement('textarea');
+            textarea.id = 'temp_element';
+            textarea.style.height = 0;
+            document.body.appendChild(textarea);
+            textarea.value = this.nextElementSibling.innerText;
+            var selector = document.querySelector('#temp_element');
+            selector.select();
+            document.execCommand('copy');
+            document.body.removeChild(textarea);
           });
         }
 window.log_results = log_results
