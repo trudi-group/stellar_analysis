@@ -31,7 +31,7 @@
 
     <p>
       Interactive analyses of the <a href="https://www.stellar.org">Stellar</a> public network using <a href="https://github.com/wiberlin/fbas_analyzer"><code>fbas_analyzer</code></a> compiled to WASM.
-      The analyses are performed in your browser using network snapshots downloaded on-demand from <a href="https://www.stellarbeat.io/">stellarbeat.io</a>.
+      The analyses are performed in your browser using network snapshots downloaded on demand from <a href="https://www.stellarbeat.io/">stellarbeat.io</a>.
       You can also trigger an analysis by clicking on the plot below.
     </p>
 
@@ -64,8 +64,8 @@
     <h2>Bulk analysis</h2>
 
     <p>
-      The following plots use nodes and organizations data from <a href="https://stellarbeat.io">stellarbeat.io</a>.
-      For each analyzed network snapshot, they show the size of the top tier, the mean, minimum and maximum of all minimal blocking set sizes, and the mean, minimum and maximum of all minimal splitting set sizes.
+      The following plot depicts bulk analysis results based on data from <a href="https://stellarbeat.io">stellarbeat.io</a>.
+      For each analyzed network snapshot, the plot shows the size of the top tier, the mean, minimum and maximum of all minimal blocking set sizes, and the mean, minimum and maximum of all minimal splitting set sizes.
     </p>
 
 
@@ -243,7 +243,7 @@ window.call_stellarbeat_on_click = call_stellarbeat_on_click
             mqs_inter = "\nSome quorums don't intersect 👎 Safety severely threatened for some nodes!<br>(Also, the remaining results here might not make much sense.)";
           }
 
-          var mqs_tooltip = "mqs_tooltip";
+          var mqs_tooltip = "Minimal sets of nodes that are sufficient to reach agreement.";
           if (results.has_intersection) {
              create_buttons_in_div("quorums |", " We found " + results.minimal_quorums_size +" minimal quorums. All quorums intersect 👍", mqs_output, mqs_tooltip); 
           } else {
@@ -251,15 +251,15 @@ window.call_stellarbeat_on_click = call_stellarbeat_on_click
       }
 
           var mbs_output = [JSON.stringify(results.minimal_blocking_sets, null, 4).replace(/\\/g, "").slice(1, -1)];
-          var mbs_tooltip = "Minimal indispensable sets for global liveness. Control over any of these sets is sufficient to compromise the liveness of all nodes and to censor future transactions.";
+          var mbs_tooltip = "Control over any of these sets is sufficient to compromise the liveness of all nodes and to censor future transactions.";
           create_buttons_in_div("blocking sets |", " We found "+ results.minimal_blocking_sets_size + " minimal blocking sets. The smallest one has size " + results.smallest_blocking_set_size + ".", mbs_output, mbs_tooltip);
 
           var mss_output = [JSON.stringify(results.minimal_splitting_sets, null, 4).replace(/\\/g, "").slice(1, -1)];
-          var mss_tooltip = "Minimal indispensable sets for safety. Control over any of these sets is sufficient to compromise safety by undermining the quorum intersection of at least two quorums.";
+          var mss_tooltip = "Control over any of these sets is sufficient to compromise safety by undermining the quorum intersection of at least two quorums.";
           create_buttons_in_div("splitting sets |", " We found " + results.minimal_splitting_sets_size + " minimal splitting sets. The smallest one has size " + results.smallest_splitting_set_size + ".", mss_output, mss_tooltip);
 
           var top_tier = [JSON.stringify(results.top_tier)];
-          var tt_tooltip = "Distinct nodes involved in all of these sets (this is the \"top tier\")."; 
+          var tt_tooltip = "These are the nodes out of which all minimal quorums, minimal blocking sets and minimal splitting sets are formed.";
           create_buttons_in_div("top tier 👑 |", " There are " + results.top_tier_size +  " nodes in the top tier.", top_tier, tt_tooltip);
           console.log("analysis duration (s): ", duration);
 
@@ -348,5 +348,14 @@ window.call_stellarbeat_on_click = call_stellarbeat_on_click
         }
 window.log_results = log_results
       </script>
+
+      <h2>About</h2>
+
+      <p>
+        This page was created by <a href="mailto:charmaine.ndolo@hu-berlin.de">Charmaine Ndolo</a> with some help by <a href="mailto:martin.florian@hu-berlin.de">Martin Florian</a>.
+        Both are part of Weizenbaum <a href="https://weizenbaum-institut.de/en/research/rg17/">Research Group 17</a>.
+        A thorough description of our analysis methodology is available <a href="https://arxiv.org/abs/2002.08101">on arXiv</a>.
+      </p>
+
     </body>
 </html>
