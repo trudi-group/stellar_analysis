@@ -74,6 +74,7 @@ code {
 	transition: max-height 0.2s ease-out;
 	background-color: rgb(246, 245, 242);
 }
+
 .tooltip {
 	position: relative;
 	display: inline-block;
@@ -108,4 +109,24 @@ code {
 .tooltip:hover .tooltiptext {
 	visibility: visible;
 	opacity: 1;
+}
+
+.copyButton {
+	background:linear-gradient(to bottom, #baab90 5%, #baab90 100%);
+	background-color:#baab90;
+	border-radius:3px;
+	border:1px solid #baab90;
+	display:inline-block;
+	cursor:pointer;
+	color:#ffffff;
+	font-size:11px;
+	padding:4px 4px;
+}
+.copyButton:hover {
+	background:linear-gradient(to bottom, #634b30 5%, #7d5d3b 100%);
+	background-color:#634b30;
+}
+.copyButton:active {
+	position:relative;
+	top:1px;
 }

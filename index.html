@@ -212,6 +212,11 @@ window.call_stellarbeat_on_click = call_stellarbeat_on_click
 
           var paragraph = document.createElement("P");
           paragraph.setAttribute('id', 'par');
+          var copy_btn = document.createElement("button");
+          copy_btn.setAttribute('class', 'copyButton');
+          copy_btn.setAttribute('title', 'Copy');
+          copy_btn.innerHTML = "&#x2398";
+		  paragraph.appendChild(copy_btn);
           for (i = 0; i < results.length; i++) {
             var myDiv = document.createElement("div");
             myDiv.id = 'myDiv';
@@ -256,7 +261,7 @@ window.call_stellarbeat_on_click = call_stellarbeat_on_click
           var top_tier = [JSON.stringify(results.top_tier)];
           var top_tier_size = "There is a total of " + results.top_tier_size + " " 
           var tt_tooltip = "Distinct nodes involved in all of these sets (this is the \"top tier\")."; 
-          create_buttons_in_div("top tier 👑 | There are " + results.top_tier_size +  "nodes in the top tier.", top_tier, tt_tooltip);
+          create_buttons_in_div("top tier 👑 | There are " + results.top_tier_size +  " nodes in the top tier.", top_tier, tt_tooltip);
           console.log("analysis duration (s): ", duration);
 
           var coll = document.getElementsByClassName("collapsible");
@@ -295,6 +300,51 @@ window.call_stellarbeat_on_click = call_stellarbeat_on_click
             } else {
                 content.style.maxHeight = content.scrollHeight + "px";
             }
+          });
+          var copy_btns = document.getElementsByClassName("copyButton");
+            copy_btns[0].addEventListener("click", function() {
+			var textarea = document.createElement('textarea');
+			textarea.id = 'temp_element';
+			textarea.style.height = 0;
+			document.body.appendChild(textarea);
+			textarea.value = this.nextElementSibling.innerText;
+			var selector = document.querySelector('#temp_element');
+			selector.select();
+			document.execCommand('copy');
+			document.body.removeChild(textarea);
+          });
+            copy_btns[1].addEventListener("click", function() {
+			var textarea = document.createElement('textarea');
+			textarea.id = 'temp_element';
+			textarea.style.height = 0;
+			document.body.appendChild(textarea);
+			textarea.value = this.nextElementSibling.innerText;
+			var selector = document.querySelector('#temp_element');
+			selector.select();
+			document.execCommand('copy');
+			document.body.removeChild(textarea);
+          });
+            copy_btns[2].addEventListener("click", function() {
+			var textarea = document.createElement('textarea');
+			textarea.id = 'temp_element';
+			textarea.style.height = 0;
+			document.body.appendChild(textarea);
+			textarea.value = this.nextElementSibling.innerText;
+			var selector = document.querySelector('#temp_element');
+			selector.select();
+			document.execCommand('copy');
+			document.body.removeChild(textarea);
+          });
+            copy_btns[3].addEventListener("click", function() {
+			var textarea = document.createElement('textarea');
+			textarea.id = 'temp_element';
+			textarea.style.height = 0;
+			document.body.appendChild(textarea);
+			textarea.value = this.nextElementSibling.innerText;
+			var selector = document.querySelector('#temp_element');
+			selector.select();
+			document.execCommand('copy');
+			document.body.removeChild(textarea);
           });
         }
 window.log_results = log_results
