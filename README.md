@@ -1,4 +1,5 @@
 1. Install [wasm-pack](https://rustwasm.github.io/wasm-pack/installer/)
+	- This requires a `Rustup` installation which can be downloaded [here](https://www.rust-lang.org/tools/install).
 2. Build the sources in the project's root directory: 
 
 ```
