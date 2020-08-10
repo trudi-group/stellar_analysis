@@ -63,18 +63,12 @@ function log_results(timestamp, stellarbeat_timestamp, results, duration) {
 	write_to_div("<b>Results for " + timestamp + " (data from Stellarbeat has timestamp " + stellarbeat_timestamp.slice(1,-1) + ")" + "</b>");
 	console.log("cache hit: ", results.cache_hit);
 	var mqs_output = [JSON.stringify(results.minimal_quorums, null, 4).replace(/\\/g, "").slice(1, -1)];
-	var mqs_inter;
-	if (results.has_intersection) {
-		mqs_inter = "\nAll quorums intersect 👍";
-	} else {
-		mqs_inter = "\nSome quorums don't intersect 👎 Safety severely threatened for some nodes!<br>(Also, the remaining results here might not make much sense.)";
-	}
 
 	var mqs_tooltip = "Minimal sets of nodes that are sufficient to reach agreement.";
 	if (results.has_intersection) {
 		create_buttons_in_div("quorums |", " We found " + results.minimal_quorums_size +" minimal quorums. All quorums intersect 👍", mqs_output, mqs_tooltip); 
 	} else {
-		create_buttons_in_div("quorums |", " We found " + results.minimal_quorums_size +" minimal quorums. Some quorums don't intersect 👎 Safety severely threatened for some nodes!(Also, the remaining results here might not make much sense.)", mqs_output, mqs_tooltip);
+		create_buttons_in_div("quorums |", " We found " + results.minimal_quorums_size +" minimal quorums. Some quorums don't intersect 👎 Safety severely threatened for some nodes! (Also, the remaining results here might not make much sense.)", mqs_output, mqs_tooltip);
 	}
 
 	var mbs_output = [JSON.stringify(results.minimal_blocking_sets, null, 4).replace(/\\/g, "").slice(1, -1)];
