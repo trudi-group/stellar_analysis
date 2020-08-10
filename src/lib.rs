@@ -34,11 +34,7 @@ struct CustomResultsStruct {
     minimal_quorums: NodeIdSetVecResult,
     minimal_quorums_size: usize,
     minimal_blocking_sets: NodeIdSetVecResult,
-    minimal_blocking_sets_size: usize,
-    smallest_blocking_set_size: usize,
     minimal_splitting_sets: NodeIdSetVecResult,
-    minimal_splitting_sets_size: usize,
-    smallest_splitting_set_size: usize,
     top_tier: NodeIdSetResult,
     top_tier_size: usize,
     has_quorum_intersection: bool,
@@ -50,11 +46,7 @@ fn do_analysis(fbas: &Fbas) -> CustomResultsStruct {
         minimal_quorums: analysis.minimal_quorums(),
         minimal_quorums_size: analysis.minimal_quorums().len(),
         minimal_blocking_sets: analysis.minimal_blocking_sets(),
-        minimal_blocking_sets_size: analysis.minimal_blocking_sets().len(),
-        smallest_blocking_set_size: analysis.minimal_blocking_sets().min(),
         minimal_splitting_sets: analysis.minimal_splitting_sets(),
-        minimal_splitting_sets_size: analysis.minimal_splitting_sets().len(),
-        smallest_splitting_set_size: analysis.minimal_splitting_sets().min(),
         top_tier: analysis.top_tier(),
         top_tier_size: analysis.top_tier().len(),
         has_quorum_intersection: analysis.has_quorum_intersection(),
@@ -101,10 +93,10 @@ pub fn fbas_analysis(json_fbas: String, json_orgs: String, merge: bool) -> JsVal
     } else {
         analysis_results.minimal_quorums.minimal_sets()
     };
-    let minimal_quorums = if merge {
-        min_mqs.into_pretty_string(&fbas, Some(&orgs))
+    let (minimal_quorums_size, minimal_quorums) = if merge {
+        (min_mqs.len(), min_mqs.into_pretty_string(&fbas, Some(&orgs)))
     } else {
-        min_mqs.into_pretty_string(&fbas, None)
+        (min_mqs.len(), min_mqs.into_pretty_string(&fbas, None))
     };
 
     let min_mbs = if merge {
@@ -115,10 +107,18 @@ pub fn fbas_analysis(json_fbas: String, json_orgs: String, merge: bool) -> JsVal
     } else {
         analysis_results.minimal_blocking_sets.minimal_sets()
     };
-    let minimal_blocking_sets = if merge {
-        min_mbs.into_pretty_string(&fbas, Some(&orgs))
+    let (minimal_blocking_sets_size, smallest_blocking_set_size, minimal_blocking_sets) = if merge {
+        (
+            min_mbs.len(),
+            min_mbs.min(),
+            min_mbs.into_pretty_string(&fbas, Some(&orgs)),
+        )
     } else {
-        min_mbs.into_pretty_string(&fbas, None)
+        (
+            min_mbs.len(),
+            min_mbs.min(),
+            min_mbs.into_pretty_string(&fbas, None),
+        )
     };
 
     let min_mss = if merge {
@@ -129,11 +129,20 @@ pub fn fbas_analysis(json_fbas: String, json_orgs: String, merge: bool) -> JsVal
     } else {
         analysis_results.minimal_splitting_sets.minimal_sets()
     };
-    let minimal_splitting_sets = if merge {
-        min_mss.into_pretty_string(&fbas, Some(&orgs))
-    } else {
-        min_mss.into_pretty_string(&fbas, None)
-    };
+    let (minimal_splitting_sets_size, smallest_splitting_set_size, minimal_splitting_sets) =
+        if merge {
+            (
+                min_mss.len(),
+                min_mss.min(),
+                min_mss.into_pretty_string(&fbas, Some(&orgs)),
+            )
+        } else {
+            (
+                min_mss.len(),
+                min_mss.min(),
+                min_mss.into_pretty_string(&fbas, None),
+            )
+        };
 
     let top_tier = if merge {
         analysis_results
@@ -144,12 +153,7 @@ pub fn fbas_analysis(json_fbas: String, json_orgs: String, merge: bool) -> JsVal
         analysis_results.top_tier.into_pretty_vec(&fbas, None)
     };
 
-    let minimal_quorums_size = analysis_results.minimal_quorums_size;
-    let minimal_blocking_sets_size = analysis_results.minimal_blocking_sets_size;
     let has_intersection = analysis_results.has_quorum_intersection;
-    let minimal_splitting_sets_size = analysis_results.minimal_splitting_sets_size;
-    let smallest_blocking_set_size = analysis_results.smallest_blocking_set_size;
-    let smallest_splitting_set_size = analysis_results.smallest_splitting_set_size;
     let top_tier_size = top_tier.len();
 
     let analysed_values = AnalysedValues {
