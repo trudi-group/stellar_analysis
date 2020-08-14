@@ -46,13 +46,52 @@ function create_buttons_in_div(title, short_results, results, tooltip) {
 	copy_btn.setAttribute('title', 'Copy');
 	copy_btn.innerHTML = "&#x2398";
 	paragraph.appendChild(copy_btn);
-	for (i = 0; i < results.length; i++) {
-		var myDiv = document.createElement("div");
-		myDiv.id = 'myDiv';
-		myDiv.innerHTML = results[i] + "<br>";
-		document.createElement("br");
-		paragraph.appendChild(myDiv);
-	}
+
+	var myDiv = document.createElement("div");
+	myDiv.id = 'myDiv';
+	myDiv.innerHTML = results;
+	paragraph.appendChild(myDiv);
+	inner_div.appendChild(paragraph);
+}
+/*
+ * Different function for symmetric top tier because 
+ * - short_results is bold
+ * - Results are written in a <pre> (JSON)
+ */
+
+function create_buttons_in_div_alter(title, short_results, results, tooltip) {
+	var btn = document.createElement("button");
+	btn.setAttribute('class', 'collapsible tooltip');
+	var tip = document.createElement('div');
+	tip.setAttribute('class', 'tooltiptext');
+	tip.innerHTML = tooltip;
+	btn.appendChild(tip);
+
+	var text = document.createTextNode(title);
+	btn.appendChild(text);
+	var bold = document.createElement("b");
+	bold.innerHTML = short_results;
+	btn.appendChild(bold);
+
+	var output = document.getElementById("results-box");
+	output.appendChild(btn);
+
+	var inner_div = document.createElement("div");
+	inner_div.setAttribute('class', 'content');
+	output.appendChild(inner_div);
+
+	var paragraph = document.createElement("P");
+	paragraph.setAttribute('id', 'par');
+	var copy_btn = document.createElement("button");
+	copy_btn.setAttribute('class', 'copyButton');
+	copy_btn.setAttribute('title', 'Copy');
+	copy_btn.innerHTML = "&#x2398";
+	paragraph.appendChild(copy_btn);
+
+	var myDiv = document.createElement("pre");
+	myDiv.id = 'myDiv';
+	myDiv.innerHTML = results;
+	paragraph.appendChild(myDiv);
 	inner_div.appendChild(paragraph);
 }
 
@@ -84,25 +123,11 @@ function log_results(timestamp, stellarbeat_timestamp, results, duration) {
 	create_buttons_in_div("top tier 👑 |", " There are " + results.top_tier_size +  " nodes in the top tier.", top_tier, tt_tooltip);
 
 	if (results.symmetric_top_tier_exists) {
-		var symmetric_top_tier = results.symmetric_top_tier;
-		var sc = symmetric_top_tier.split("\n");
-		for (i = 0; i < sc.length; i++) {
-			var spaces = 0;
-			if (i == 0 || i == (sc.length-1)) { // outermost
-			} else if (i == 1 || i == sc.length - 2) { // level 1, }
-				spaces = 2;
-				sc[i] = '&nbsp;'.repeat(spaces) + sc[i];
-			} else if (i == 2 || i == 3 || i == sc.length - 3) { //
-				spaces = 4; //threshold, "validators", ]
-				sc[i] = '&nbsp;'.repeat(spaces) + sc[i];
-			} else {
-				spaces = 8;
-				sc[i] = '&nbsp;'.repeat(spaces) + sc[i];
-			}
-		}
-		symmetric_top_tier = symmetric_top_tier;
+		var symmetric_top_tier = results.symmetric_top_tier.slice(1, -1);
+		symmetric_top_tier = JSON.stringify(JSON.parse(symmetric_top_tier), null, 4);
+		console.log("sc: ", symmetric_top_tier);
 		var sc_tooltip = "All top tier nodes have identical quorum sets."
-		create_buttons_in_div("We found a symmetric top tier.", "", sc, sc_tooltip);
+		create_buttons_in_div_alter("The top tier is", " symmetric.", symmetric_top_tier, sc_tooltip);
 	}
 
 	console.log("analysis duration (s): ", duration);

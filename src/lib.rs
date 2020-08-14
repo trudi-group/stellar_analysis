@@ -164,7 +164,11 @@ pub fn fbas_analysis(json_fbas: String, json_orgs: String, merge: bool) -> JsVal
     let has_intersection = analysis_results.has_quorum_intersection;
     let top_tier_size = top_tier.len();
 
-    let sc = orgs.merge_quorum_sets(analysis_results.symmetric_clusters);
+    let sc = if merge {
+        orgs.merge_quorum_sets(analysis_results.symmetric_clusters)
+    } else {
+        analysis_results.symmetric_clusters
+    };
     let (symmetric_top_tier, symmetric_top_tier_exists) = if has_intersection && (sc.len() == 1) {
         if merge {
             (sc.into_pretty_string(&fbas, Some(&orgs)), true)
