@@ -56,10 +56,11 @@ function create_buttons_in_div(title, short_results, results, tooltip) {
 /*
  * Different function for symmetric top tier because 
  * - short_results is bold
+ * - non-bold text after short_results
  * - Results are written in a <pre> (JSON)
  */
 
-function create_buttons_in_div_alter(title, short_results, results, tooltip) {
+function create_buttons_in_div_alter(title, short_results, sub_results, results, tooltip) {
 	var btn = document.createElement("button");
 	btn.setAttribute('class', 'collapsible tooltip');
 	var tip = document.createElement('div');
@@ -72,6 +73,8 @@ function create_buttons_in_div_alter(title, short_results, results, tooltip) {
 	var bold = document.createElement("b");
 	bold.innerHTML = short_results;
 	btn.appendChild(bold);
+	text = document.createTextNode(sub_results);
+	btn.appendChild(text);
 
 	var output = document.getElementById("results-box");
 	output.appendChild(btn);
@@ -127,7 +130,7 @@ function log_results(timestamp, stellarbeat_timestamp, results, duration) {
 		symmetric_top_tier = JSON.stringify(JSON.parse(symmetric_top_tier), null, 4);
 		console.log("sc: ", symmetric_top_tier);
 		var sc_tooltip = "All top tier nodes have identical quorum sets."
-		create_buttons_in_div_alter("The top tier is", " symmetric.", symmetric_top_tier, sc_tooltip);
+		create_buttons_in_div_alter("The top tier is", " symmetric", ".", symmetric_top_tier, sc_tooltip);
 	}
 
 	console.log("analysis duration (s): ", duration);
