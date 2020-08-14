@@ -26,6 +26,8 @@ pub struct AnalysedValues {
     smallest_splitting_set_size: usize,
     top_tier: Vec<String>,
     top_tier_size: usize,
+    symmetric_top_tier_exists: bool,
+    symmetric_top_tier: String,
     cache_hit: bool,
 }
 
@@ -38,10 +40,12 @@ struct CustomResultsStruct {
     top_tier: NodeIdSetResult,
     top_tier_size: usize,
     has_quorum_intersection: bool,
+    symmetric_clusters: Vec<QuorumSet>,
 }
 
 fn do_analysis(fbas: &Fbas) -> CustomResultsStruct {
     let analysis = Analysis::new(fbas);
+
     CustomResultsStruct {
         minimal_quorums: analysis.minimal_quorums(),
         minimal_quorums_size: analysis.minimal_quorums().len(),
@@ -50,6 +54,7 @@ fn do_analysis(fbas: &Fbas) -> CustomResultsStruct {
         top_tier: analysis.top_tier(),
         top_tier_size: analysis.top_tier().len(),
         has_quorum_intersection: analysis.has_quorum_intersection(),
+        symmetric_clusters: analysis.symmetric_clusters(),
     }
 }
 
@@ -94,7 +99,10 @@ pub fn fbas_analysis(json_fbas: String, json_orgs: String, merge: bool) -> JsVal
         analysis_results.minimal_quorums.minimal_sets()
     };
     let (minimal_quorums_size, minimal_quorums) = if merge {
-        (min_mqs.len(), min_mqs.into_pretty_string(&fbas, Some(&orgs)))
+        (
+            min_mqs.len(),
+            min_mqs.into_pretty_string(&fbas, Some(&orgs)),
+        )
     } else {
         (min_mqs.len(), min_mqs.into_pretty_string(&fbas, None))
     };
@@ -156,6 +164,17 @@ pub fn fbas_analysis(json_fbas: String, json_orgs: String, merge: bool) -> JsVal
     let has_intersection = analysis_results.has_quorum_intersection;
     let top_tier_size = top_tier.len();
 
+    let sc = orgs.merge_quorum_sets(analysis_results.symmetric_clusters);
+    let (symmetric_top_tier, symmetric_top_tier_exists) = if has_intersection && (sc.len() == 1) {
+        if merge {
+            (sc.into_pretty_string(&fbas, Some(&orgs)), true)
+        } else {
+            (sc.into_pretty_string(&fbas, None), true)
+        }
+    } else {
+        (String::default(), false)
+    };
+
     let analysed_values = AnalysedValues {
         minimal_quorums,
         minimal_quorums_size,
@@ -168,6 +187,8 @@ pub fn fbas_analysis(json_fbas: String, json_orgs: String, merge: bool) -> JsVal
         smallest_splitting_set_size,
         top_tier,
         top_tier_size,
+        symmetric_top_tier_exists,
+        symmetric_top_tier,
         cache_hit,
     };
     JsValue::from_serde(&analysed_values).unwrap()

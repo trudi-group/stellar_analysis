@@ -49,7 +49,7 @@ function create_buttons_in_div(title, short_results, results, tooltip) {
 	for (i = 0; i < results.length; i++) {
 		var myDiv = document.createElement("div");
 		myDiv.id = 'myDiv';
-		myDiv.innerHTML = results[i] + "<br><br>";
+		myDiv.innerHTML = results[i] + "<br>";
 		document.createElement("br");
 		paragraph.appendChild(myDiv);
 	}
@@ -82,6 +82,29 @@ function log_results(timestamp, stellarbeat_timestamp, results, duration) {
 	var top_tier = [JSON.stringify(results.top_tier)];
 	var tt_tooltip = "These are the nodes out of which all minimal quorums, minimal blocking sets and minimal splitting sets are formed.";
 	create_buttons_in_div("top tier 👑 |", " There are " + results.top_tier_size +  " nodes in the top tier.", top_tier, tt_tooltip);
+
+	if (results.symmetric_top_tier_exists) {
+		var symmetric_top_tier = results.symmetric_top_tier;
+		var sc = symmetric_top_tier.split("\n");
+		for (i = 0; i < sc.length; i++) {
+			var spaces = 0;
+			if (i == 0 || i == (sc.length-1)) { // outermost
+			} else if (i == 1 || i == sc.length - 2) { // level 1, }
+				spaces = 2;
+				sc[i] = '&nbsp;'.repeat(spaces) + sc[i];
+			} else if (i == 2 || i == 3 || i == sc.length - 3) { //
+				spaces = 4; //threshold, "validators", ]
+				sc[i] = '&nbsp;'.repeat(spaces) + sc[i];
+			} else {
+				spaces = 8;
+				sc[i] = '&nbsp;'.repeat(spaces) + sc[i];
+			}
+		}
+		symmetric_top_tier = symmetric_top_tier;
+		var sc_tooltip = "All top tier nodes have identical quorum sets."
+		create_buttons_in_div("We found a symmetric top tier.", "", sc, sc_tooltip);
+	}
+
 	console.log("analysis duration (s): ", duration);
 
 	var coll = document.getElementsByClassName("collapsible");
@@ -121,6 +144,19 @@ function log_results(timestamp, stellarbeat_timestamp, results, duration) {
 			content.style.maxHeight = content.scrollHeight + "px";
 		}
 	});
+
+	if (coll.length > 4) {
+		coll[4].addEventListener("click", function() {
+			this.classList.toggle("active");
+			var content = this.nextElementSibling;
+			if (content.style.maxHeight){
+				content.style.maxHeight = null;
+			} else {
+				content.style.maxHeight = content.scrollHeight + "px";
+			}
+		});
+	}
+
 	var copy_btns = document.getElementsByClassName("copyButton");
 	copy_btns[0].addEventListener("click", function() {
 		var textarea = document.createElement('textarea');
@@ -166,4 +202,18 @@ function log_results(timestamp, stellarbeat_timestamp, results, duration) {
 		document.execCommand('copy');
 		document.body.removeChild(textarea);
 	});
+
+	if (copy_btns.length > 4) {
+		copy_btns[4].addEventListener("click", function() {
+			var textarea = document.createElement('textarea');
+			textarea.id = 'temp_element';
+			textarea.style.height = 0;
+			document.body.appendChild(textarea);
+			textarea.value = this.nextElementSibling.innerText;
+			var selector = document.querySelector('#temp_element');
+			selector.select();
+			document.execCommand('copy');
+			document.body.removeChild(textarea);
+		});
+		}
 }
