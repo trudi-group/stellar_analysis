@@ -10,7 +10,6 @@ function call_stellarbeat_on_input() {
 	xhr.send();
 	xhr.onload = function() {
 		console.log(xhr.status);
-		console.log(xhr.response);
 		fbas = xhr.response;
 		prepare_fbas_string(timestamp, fbas);
 		return xhr.response;
@@ -30,7 +29,6 @@ function call_stellarbeat_on_click(clicked_date) {
 	xhr.send();
 	xhr.onload = function() {
 		console.log(xhr.status);
-		console.log(xhr.response);
 		fbas = xhr.response;
 		prepare_fbas_string(timestamp, fbas);
 		return xhr.response;
@@ -42,14 +40,24 @@ function prepare_fbas_string(timestamp, text) {
 	const stellarbeat_nodes = JSON.stringify(js_object[Object.keys(js_object)[0]]);
 	const stellarbeat_orga = JSON.stringify(js_object[Object.keys(js_object)[1]]);
 	stellarbeat_timestamp = JSON.stringify(js_object[Object.keys(js_object)[2]]);
-	current_nodes = stellarbeat_nodes;
-	current_orgs = stellarbeat_orga;
+	console.log("nodes: ", stellarbeat_nodes);
 	console.log(text.length);
 	fbas_from_stellarbeat = stellarbeat_nodes;
+
+	var inactive_nodes = [];
+	const nodes_as_obj = JSON.parse(fbas_from_stellarbeat);
+	nodes_as_obj.forEach(function(item){
+		if (item.active === false) {
+			inactive_nodes.push(item.publicKey);
+		}
+	});
+	const faulty_nodes = JSON.stringify(inactive_nodes);
+	console.log("faulty_nodes: ", faulty_nodes);
+
 	var should_merge = document.getElementById("merge_box").checked;
 	console.log("to_merge: ", should_merge);
 	var start = performance.now();
-	var promise_results = run(fbas_from_stellarbeat, stellarbeat_orga, should_merge);
+	var promise_results = run(fbas_from_stellarbeat, stellarbeat_orga, faulty_nodes, should_merge);
 	var stop = performance.now();
 	const duration = stop - start;
 	const time_as_secs = duration / 1000;

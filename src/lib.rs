@@ -29,6 +29,7 @@ pub struct AnalysedValues {
     symmetric_top_tier_exists: bool,
     symmetric_top_tier: String,
     cache_hit: bool,
+    node_id: usize,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -76,9 +77,18 @@ fn fbas_has_been_analysed(fbas: &Fbas) -> Option<CustomResultsStruct> {
 }
 
 #[wasm_bindgen]
-pub fn fbas_analysis(json_fbas: String, json_orgs: String, merge: bool) -> JsValue {
-    let fbas: Fbas = Fbas::from_json_str(&json_fbas).to_standard_form();
+pub fn fbas_analysis(
+    json_fbas: String,
+    json_orgs: String,
+    faulty_nodes: String,
+    merge: bool,
+) -> JsValue {
+    // Transforming to standard form results in the PKs not being found later on
+    //let fbas: Fbas = Fbas::from_json_str(&json_fbas).to_standard_form();
+    let fbas: Fbas = Fbas::from_json_str(&json_fbas);
     let orgs = Organizations::from_json_str(&json_orgs, &fbas);
+    let inactive_nodes: Vec<String> = serde_json::from_str(&faulty_nodes).unwrap();
+    let inactive_nodes: Vec<&str> = inactive_nodes.iter().map(|s| s.as_ref()).collect();
     let mut cache_hit = false;
     let analysis_results = if let Some(cached_results) = fbas_has_been_analysed(&fbas) {
         cache_hit = true;
@@ -107,13 +117,20 @@ pub fn fbas_analysis(json_fbas: String, json_orgs: String, merge: bool) -> JsVal
         (min_mqs.len(), min_mqs.into_pretty_string(&fbas, None))
     };
 
-    let min_mbs = if merge {
+    let node = "GCOREAXCHDRN5OTB6W65LV3W6PXS2DNA4LJU3XLPYWTINSRHH2ZD6M2Z";
+    //let inactive_nodes = vec!["GCOREAXCHDRN5OTB6W65LV3W6PXS2DNA4LJU3XLPYWTINSRHH2ZD6M2Z"];
+    // Test if the PK is really not in the fbas by getting the ID
+    let node_id = fbas.get_node_id(node).unwrap_or_else(|| usize::MAX);
+
+    let min_mbs_without_faulty =
         analysis_results
             .minimal_blocking_sets
-            .merged_by_org(&orgs)
-            .minimal_sets()
+            .without_nodes_pretty(&inactive_nodes, &fbas, None);
+
+    let min_mbs = if merge {
+        min_mbs_without_faulty.merged_by_org(&orgs).minimal_sets()
     } else {
-        analysis_results.minimal_blocking_sets.minimal_sets()
+        min_mbs_without_faulty.minimal_sets()
     };
     let (minimal_blocking_sets_size, smallest_blocking_set_size, minimal_blocking_sets) = if merge {
         (
@@ -194,6 +211,7 @@ pub fn fbas_analysis(json_fbas: String, json_orgs: String, merge: bool) -> JsVal
         symmetric_top_tier_exists,
         symmetric_top_tier,
         cache_hit,
+        node_id,
     };
     JsValue::from_serde(&analysed_values).unwrap()
 }

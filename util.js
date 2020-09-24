@@ -128,12 +128,12 @@ function log_results(timestamp, stellarbeat_timestamp, results, duration) {
 	if (results.symmetric_top_tier_exists) {
 		var symmetric_top_tier = results.symmetric_top_tier.slice(1, -1);
 		symmetric_top_tier = JSON.stringify(JSON.parse(symmetric_top_tier), null, 4);
-		console.log("sc: ", symmetric_top_tier);
 		var sc_tooltip = "All top tier nodes have identical quorum sets."
 		create_buttons_in_div_alter("The top tier is", " symmetric", ".", symmetric_top_tier, sc_tooltip);
 	}
 
 	console.log("analysis duration (s): ", duration);
+	console.log("node_id: ", results.node_id);
 
 	var coll = document.getElementsByClassName("collapsible");
 	coll[0].addEventListener("click", function() {
