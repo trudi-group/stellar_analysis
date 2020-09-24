@@ -138,6 +138,7 @@ function log_results(timestamp, stellarbeat_timestamp, results, duration) {
 	}
 
 	console.log("analysis duration (s): ", duration);
+	console.log("node_id: ", results.node_id);
 
 	var coll = document.getElementsByClassName("collapsible");
 	coll[0].addEventListener("click", function() {
