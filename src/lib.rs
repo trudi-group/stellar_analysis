@@ -29,7 +29,6 @@ pub struct AnalysedValues {
     symmetric_top_tier_exists: bool,
     symmetric_top_tier: String,
     cache_hit: bool,
-    node_id: usize,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -83,9 +82,7 @@ pub fn fbas_analysis(
     faulty_nodes: String,
     merge: bool,
 ) -> JsValue {
-    // Transforming to standard form results in the PKs not being found later on
-    //let fbas: Fbas = Fbas::from_json_str(&json_fbas).to_standard_form();
-    let fbas: Fbas = Fbas::from_json_str(&json_fbas);
+    let fbas: Fbas = Fbas::from_json_str(&json_fbas).to_standard_form();
     let orgs = Organizations::from_json_str(&json_orgs, &fbas);
     let inactive_nodes: Vec<String> = serde_json::from_str(&faulty_nodes).unwrap();
     let inactive_nodes: Vec<&str> = inactive_nodes.iter().map(|s| s.as_ref()).collect();
@@ -116,11 +113,6 @@ pub fn fbas_analysis(
     } else {
         (min_mqs.len(), min_mqs.into_pretty_string(&fbas, None))
     };
-
-    let node = "GCOREAXCHDRN5OTB6W65LV3W6PXS2DNA4LJU3XLPYWTINSRHH2ZD6M2Z";
-    //let inactive_nodes = vec!["GCOREAXCHDRN5OTB6W65LV3W6PXS2DNA4LJU3XLPYWTINSRHH2ZD6M2Z"];
-    // Test if the PK is really not in the fbas by getting the ID
-    let node_id = fbas.get_node_id(node).unwrap_or_else(|| usize::MAX);
 
     let min_mbs_without_faulty =
         analysis_results
@@ -211,7 +203,6 @@ pub fn fbas_analysis(
         symmetric_top_tier_exists,
         symmetric_top_tier,
         cache_hit,
-        node_id,
     };
     JsValue::from_serde(&analysed_values).unwrap()
 }
