@@ -37,4 +37,10 @@ This section covers how this tool can be deployed to your web server instead.
 
 3. Depending on your web server, you can now serve the page on your server.
 
+## Package managers
+
+- This tool is also now available on [npm](https://www.npmjs.com/package/stellar_analysis) and can be installed using
+
+	`npm i stellar_analysis`
+
 The analyses performed here are powered by the [fbas_analyzer](https://github.com/wiberlin/fbas_analyzer) tool/library.
