@@ -102,7 +102,7 @@ function log_results(timestamp, stellarbeat_timestamp, results, duration) {
 
 	div.innerHTML = "";
 
-	write_to_div("<b>Results for " + timestamp + " (data from Stellarbeat has timestamp " + stellarbeat_timestamp.slice(1,-1) + ")" + "</b>");
+	write_to_div("<b>Results for " + timestamp + " (data from Stellarbeat has timestamp " + stellarbeat_timestamp + ")" + "</b>");
 	console.log("cache hit: ", results.cache_hit);
 	var mqs_output = [JSON.stringify(results.minimal_quorums, null, 4).replace(/\\/g, "").slice(1, -1)];
 

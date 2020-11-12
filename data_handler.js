@@ -4,7 +4,7 @@ function call_stellarbeat_on_input() {
 	var url = "https://api.stellarbeat.io/v2/all?at=" + date.value + "T" + time.value;
 	console.log(url);
 	timestamp = date.value + "T" + time.value;
-	console.log("timestamp: ", timestamp );
+	console.log("input timestamp: ", timestamp );
 	var xhr = new XMLHttpRequest();
 	xhr.open("GET", url);
 	xhr.send();
@@ -23,7 +23,7 @@ function call_stellarbeat_on_click(clicked_date) {
 	document.getElementById('time').value = time;
 	console.log(url);
 	timestamp = clicked_date + "T" + time;
-	console.log("timestamp: ", timestamp );
+	console.log("input timestamp: ", timestamp );
 	var xhr = new XMLHttpRequest();
 	xhr.open("GET", url);
 	xhr.send();
@@ -39,8 +39,8 @@ function prepare_fbas_string(timestamp, text) {
 	var js_object = JSON.parse(text);
 	const stellarbeat_nodes = JSON.stringify(js_object[Object.keys(js_object)[0]]);
 	const stellarbeat_orga = JSON.stringify(js_object[Object.keys(js_object)[1]]);
-	stellarbeat_timestamp = JSON.stringify(js_object[Object.keys(js_object)[2]]);
-	console.log("nodes: ", stellarbeat_nodes);
+	var stellarbeat_time_map = JSON.stringify(js_object[Object.keys(js_object)[2]]);
+    stellarbeat_timestamp = JSON.parse(stellarbeat_time_map)["time"];
 	console.log(text.length);
 	fbas_from_stellarbeat = stellarbeat_nodes;
 
@@ -52,7 +52,6 @@ function prepare_fbas_string(timestamp, text) {
 		}
 	});
 	const faulty_nodes = JSON.stringify(inactive_nodes);
-	console.log("faulty_nodes: ", faulty_nodes);
 
 	var should_merge = document.getElementById("merge_box").checked;
 	console.log("to_merge: ", should_merge);
