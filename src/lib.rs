@@ -13,6 +13,15 @@ pub fn init_panic_hook() {
     console_error_panic_hook::set_once();
 }
 
+#[wasm_bindgen]
+#[derive(PartialEq)]
+pub enum MergeBy {
+    Orgs,
+    ISPs,
+    Countries,
+    DoNotMerge,
+}
+
 #[derive(Serialize, Default)]
 pub struct AnalysedValues {
     minimal_quorums: String,
@@ -80,10 +89,15 @@ pub fn fbas_analysis(
     json_fbas: String,
     json_orgs: String,
     faulty_nodes: String,
-    merge: bool,
+    merge_by: MergeBy,
 ) -> JsValue {
     let fbas: Fbas = Fbas::from_json_str(&json_fbas).to_standard_form();
-    let orgs = Organizations::from_json_str(&json_orgs, &fbas);
+    let grouping = match merge_by {
+        MergeBy::Orgs => Some(Groupings::organizations_from_json_str(&json_orgs, &fbas)),
+        MergeBy::ISPs => Some(Groupings::isps_from_json_str(&json_fbas, &fbas)),
+        MergeBy::Countries => Some(Groupings::countries_from_json_str(&json_fbas, &fbas)),
+        MergeBy::DoNotMerge => None,
+    };
     let inactive_nodes: Vec<String> = serde_json::from_str(&faulty_nodes).unwrap();
     let inactive_nodes: Vec<&str> = inactive_nodes.iter().map(|s| s.as_ref()).collect();
     let mut cache_hit = false;
@@ -97,18 +111,19 @@ pub fn fbas_analysis(
         new_results
     };
 
-    let min_mqs = if merge {
+    let min_mqs = if merge_by != MergeBy::DoNotMerge {
         analysis_results
             .minimal_quorums
-            .merged_by_org(&orgs)
+            .merged_by_group(&grouping.clone().unwrap())
             .minimal_sets()
     } else {
         analysis_results.minimal_quorums.minimal_sets()
     };
-    let (minimal_quorums_size, minimal_quorums) = if merge {
+
+    let (minimal_quorums_size, minimal_quorums) = if merge_by != MergeBy::DoNotMerge {
         (
             min_mqs.len(),
-            min_mqs.into_pretty_string(&fbas, Some(&orgs)),
+            min_mqs.into_pretty_string(&fbas, grouping.as_ref()),
         )
     } else {
         (min_mqs.len(), min_mqs.into_pretty_string(&fbas, None))
@@ -119,39 +134,42 @@ pub fn fbas_analysis(
             .minimal_blocking_sets
             .without_nodes_pretty(&inactive_nodes, &fbas, None);
 
-    let min_mbs = if merge {
-        min_mbs_without_faulty.merged_by_org(&orgs).minimal_sets()
+    let min_mbs = if merge_by != MergeBy::DoNotMerge {
+        min_mbs_without_faulty
+            .merged_by_group(&grouping.clone().unwrap())
+            .minimal_sets()
     } else {
         min_mbs_without_faulty.minimal_sets()
     };
-    let (minimal_blocking_sets_size, smallest_blocking_set_size, minimal_blocking_sets) = if merge {
-        (
-            min_mbs.len(),
-            min_mbs.min(),
-            min_mbs.into_pretty_string(&fbas, Some(&orgs)),
-        )
-    } else {
-        (
-            min_mbs.len(),
-            min_mbs.min(),
-            min_mbs.into_pretty_string(&fbas, None),
-        )
-    };
+    let (minimal_blocking_sets_size, smallest_blocking_set_size, minimal_blocking_sets) =
+        if merge_by != MergeBy::DoNotMerge {
+            (
+                min_mbs.len(),
+                min_mbs.min(),
+                min_mbs.into_pretty_string(&fbas, grouping.as_ref()),
+            )
+        } else {
+            (
+                min_mbs.len(),
+                min_mbs.min(),
+                min_mbs.into_pretty_string(&fbas, None),
+            )
+        };
 
-    let min_mss = if merge {
+    let min_mss = if merge_by != MergeBy::DoNotMerge {
         analysis_results
             .minimal_splitting_sets
-            .merged_by_org(&orgs)
+            .merged_by_group(&grouping.clone().unwrap())
             .minimal_sets()
     } else {
         analysis_results.minimal_splitting_sets.minimal_sets()
     };
     let (minimal_splitting_sets_size, smallest_splitting_set_size, minimal_splitting_sets) =
-        if merge {
+        if merge_by != MergeBy::DoNotMerge {
             (
                 min_mss.len(),
                 min_mss.min(),
-                min_mss.into_pretty_string(&fbas, Some(&orgs)),
+                min_mss.into_pretty_string(&fbas, grouping.as_ref()),
             )
         } else {
             (
@@ -161,11 +179,11 @@ pub fn fbas_analysis(
             )
         };
 
-    let top_tier = if merge {
+    let top_tier = if merge_by != MergeBy::DoNotMerge {
         analysis_results
             .top_tier
-            .merged_by_org(&orgs)
-            .into_pretty_vec(&fbas, Some(&orgs))
+            .merged_by_group(&grouping.clone().unwrap())
+            .into_pretty_vec(&fbas, grouping.as_ref())
     } else {
         analysis_results.top_tier.into_pretty_vec(&fbas, None)
     };
@@ -173,14 +191,17 @@ pub fn fbas_analysis(
     let has_intersection = analysis_results.has_quorum_intersection;
     let top_tier_size = top_tier.len();
 
-    let sc = if merge {
-        orgs.merge_quorum_sets(analysis_results.symmetric_clusters)
+    let sc = if merge_by != MergeBy::DoNotMerge {
+        grouping
+            .clone()
+            .unwrap()
+            .merge_quorum_sets(analysis_results.symmetric_clusters)
     } else {
         analysis_results.symmetric_clusters
     };
     let (symmetric_top_tier, symmetric_top_tier_exists) = if has_intersection && (sc.len() == 1) {
-        if merge {
-            (sc.into_pretty_string(&fbas, Some(&orgs)), true)
+        if merge_by != MergeBy::DoNotMerge {
+            (sc.into_pretty_string(&fbas, grouping.as_ref()), true)
         } else {
             (sc.into_pretty_string(&fbas, None), true)
         }

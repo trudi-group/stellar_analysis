@@ -53,8 +53,7 @@ function prepare_fbas_string(timestamp, text) {
 	});
 	const faulty_nodes = JSON.stringify(inactive_nodes);
 
-	var should_merge = document.getElementById("merge_box").checked;
-	console.log("to_merge: ", should_merge);
+	var should_merge = merge_selection();
 	var start = performance.now();
 	var promise_results = run(fbas_from_stellarbeat, stellarbeat_orga, faulty_nodes, should_merge);
 	var stop = performance.now();

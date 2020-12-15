@@ -23,8 +23,13 @@
     <h1>Stellar Network Analysis</h1>
 
     <div class="control-box">
-      <input name="to_merge" id=merge_box type="checkbox" checked=checked onclick="make_chart_from_csv_url('daily_chart_merged_by_org', 'stellarbeat_daily.csv'); maybe_change_analysis()">
-      <label for="to_merge"> Merge nodes by organizations (nodes by the same organization will count as 1)</label><br>
+        <label for="to_merge"> Merge nodes by grouping (nodes by the same grouping will count as 1)</label><br>
+        <form name="merge">
+          <input name="merge_box" id="merge-orgs" type="radio" value="orgs" checked onclick="determine_merge_selection()"> Organizations
+          <input name="merge_box" id="merge-isps" type="radio" value="isps" onclick="determine_merge_selection()">ISPs
+          <input name="merge_box" id="merge-ctry" type="radio" value="ctry" onclick="determine_merge_selection()">Countries
+          <input name="merge_box" id="no-merge" type="radio" value="none" onclick="determine_merge_selection()">Do not merge
+        </form>
     </div>
 
     <h2>In-depth analysis of one snapshot</h2>
@@ -55,7 +60,9 @@
         var today = new Date(yyyy + '-' + mm +'-' + dd);
         document.getElementById('date').valueAsDate = today;
         document.getElementById('time').value = current_time;
-        document.getElementById('merge_box').checked = true;
+        orgs_btn = document.getElementById('merge-orgs');
+        orgs_btn.checked = true;
+        make_chart_from_csv_url('daily_chart_merged_by_org', 'stellarbeat_daily.csv');
       }
       </script>
     </div>
@@ -78,11 +85,33 @@
       <script type="text/javascript" src="graph.js"></script>
       <script type="text/javascript" src="util.js"></script>
       <script charset="utf-8">
+          var should_merge;
+      </script>
+      <script charset="utf-8">
+          function determine_merge_selection() {
+                for (i = 0; i < document.merge.merge_box.length; i++) {
+                if (document.merge.merge_box[i].checked) {
+                    should_merge = i;
+                    make_chart_from_csv_url('daily_chart_merged_by_org', 'stellarbeat_daily.csv');
+                    maybe_change_analysis();
+                    return i;
+                }
+             }
+          }
+          window.determine_merge_selection = determine_merge_selection
+      </script>
+      <script charset="utf-8">
+        const MergeOptions = {
+            ORGS: 0,
+            ISPS: 1,
+            COUNTRY: 2,
+            NONE: 3
+        };
         var current_nodes;
         var current_orgs;
         var timestamp;
         var stellarbeat_timestamp; 
-        var should_merge = document.getElementById("merge_box").checked;
+        should_merge = determine_merge_selection();
         make_chart_from_csv_url('daily_chart_merged_by_org', 'stellarbeat_daily.csv');
       </script>
 

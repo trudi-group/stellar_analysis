@@ -1,9 +1,19 @@
-var should_merge = document.getElementById("merge_box").checked;
+function merge_selection() {
+      for (i = 0; i < document.merge.merge_box.length; i++) {
+      if (document.merge.merge_box[i].checked) {
+          return i;
+      }
+   }
+}
+
+var should_merge = merge_selection();
+const merged_orgs_title = "Merged by organization (nodes by the same organization count as 1)";
+const merged_isps_title = "Merged by isp (nodes by the same isp count as 1)";
+const merged_ctry_title = "Merged by country (nodes by the same country count as 1)";
+const raw_title = "Raw nodes (each physical node counts as 1)";
 
 function make_chart_from_csv_url(canvas_id, csv_url) {
-	const merged_title = "Merged by organization (nodes by the same organization count as 1)";
-	const raw_title = "Raw nodes (each physical node counts as 1)";
-	should_merge = document.getElementById("merge_box").checked;
+	should_merge = merge_selection();
 	d3.csv(csv_url).then(function(csv_data) { make_chart_from_csv_data(canvas_id, csv_data); });
 }
 
@@ -20,7 +30,7 @@ function make_chart_from_csv_data(canvas_id, csv_data) {
 	};
 
 	var chart_data = [];
-	if (should_merge == false) {
+	if (should_merge == MergeOptions.NONE) {
 		chart_data = {
 			labels: csv_data.map(function(d) {return d.label}),
 			datasets: [{
@@ -73,7 +83,7 @@ function make_chart_from_csv_data(canvas_id, csv_data) {
 				fill: 4
 			}]
 		};
-	} else {
+    } else if (should_merge == MergeOptions.ORGS) {
 		chart_data = {
 			labels: csv_data.map(function(d) {return d.label}),
 			datasets: [{
@@ -126,14 +136,123 @@ function make_chart_from_csv_data(canvas_id, csv_data) {
 				fill: 4
 			}]
 		};
-
+	} else if (should_merge == MergeOptions.ISPS) {
+		chart_data = {
+			labels: csv_data.map(function(d) {return d.label}),
+			datasets: [{
+				data: csv_data.map(function(d) {return d.isps_top_tier_size}),
+				label: '|top tier|',
+				borderColor: colors.tt,
+				steppedLine: true,
+				fill: -1
+			}, {
+				data: csv_data.map(function(d) {return d.isps_mbs_mean}),
+				label: 'mean(|minimal blocking sets|)',
+				borderColor: colors.mbs,
+				backgroundColor: colors.mbs_light,
+				steppedLine: true,
+				fill: -1
+			}, {
+				data: csv_data.map(function(d) {return d.isps_mbs_min}),
+				label: 'min(|minimal blocking sets|)',
+				borderWidth: 0,
+				backgroundColor: colors.mbs_light,
+				steppedLine: true,
+				fill: 1
+			}, {
+				data: csv_data.map(function(d) {return d.isps_mbs_max}),
+				label: 'max(|minimal blocking sets|)',
+				borderWidth: 0,
+				backgroundColor: colors.mbs_light,
+				steppedLine: true,
+				fill: 1
+			}, {
+				data: csv_data.map(function(d) {return d.isps_mss_mean}),
+				label: 'mean(|minimal splitting sets|)',
+				borderColor: colors.mss,
+				backgroundColor: colors.mss_light,
+				steppedLine: true,
+				fill: -1
+			}, {
+				data: csv_data.map(function(d) {return d.isps_mss_min}),
+				label: 'min(|minimal splitting sets|)',
+				borderWidth: 0,
+				backgroundColor: colors.mss_light,
+				steppedLine: true,
+				fill: 4
+			}, {
+				data: csv_data.map(function(d) {return d.isps_mss_max}),
+				label: 'max(|minimal splitting sets|)',
+				borderWidth: 0,
+				backgroundColor: colors.mss_light,
+				steppedLine: true,
+				fill: 4
+			}]
+		};
+	} else if (should_merge == MergeOptions.COUNTRY) {
+		chart_data = {
+			labels: csv_data.map(function(d) {return d.label}),
+			datasets: [{
+				data: csv_data.map(function(d) {return d.ctries_top_tier_size}),
+				label: '|top tier|',
+				borderColor: colors.tt,
+				steppedLine: true,
+				fill: -1
+			}, {
+				data: csv_data.map(function(d) {return d.ctries_mbs_mean}),
+				label: 'mean(|minimal blocking sets|)',
+				borderColor: colors.mbs,
+				backgroundColor: colors.mbs_light,
+				steppedLine: true,
+				fill: -1
+			}, {
+				data: csv_data.map(function(d) {return d.ctries_mbs_min}),
+				label: 'min(|minimal blocking sets|)',
+				borderWidth: 0,
+				backgroundColor: colors.mbs_light,
+				steppedLine: true,
+				fill: 1
+			}, {
+				data: csv_data.map(function(d) {return d.ctries_mbs_max}),
+				label: 'max(|minimal blocking sets|)',
+				borderWidth: 0,
+				backgroundColor: colors.mbs_light,
+				steppedLine: true,
+				fill: 1
+			}, {
+				data: csv_data.map(function(d) {return d.ctries_mss_mean}),
+				label: 'mean(|minimal splitting sets|)',
+				borderColor: colors.mss,
+				backgroundColor: colors.mss_light,
+				steppedLine: true,
+				fill: -1
+			}, {
+				data: csv_data.map(function(d) {return d.ctries_mss_min}),
+				label: 'min(|minimal splitting sets|)',
+				borderWidth: 0,
+				backgroundColor: colors.mss_light,
+				steppedLine: true,
+				fill: 4
+			}, {
+				data: csv_data.map(function(d) {return d.ctries_mss_max}),
+				label: 'max(|minimal splitting sets|)',
+				borderWidth: 0,
+				backgroundColor: colors.mss_light,
+				steppedLine: true,
+				fill: 4
+			}]
+		};
 	}
 
 	var chart_text;
-	if (should_merge) {
-		chart_text = "Merged by organization (nodes by the same organization count as 1)"
-	} else {
-		chart_text = "Raw nodes (each physical node counts as 1)";
+	if (should_merge == MergeOptions.ORGS) {
+		chart_text = merged_orgs_title;
+	} else if (should_merge == MergeOptions.NONE){
+		chart_text = raw_title;
+	} else if (should_merge == MergeOptions.ISPS){
+		chart_text = merged_isps_title;
+	} else if (should_merge == MergeOptions.COUNTRY){
+		chart_text = merged_ctry_title;
 	}
 
 	var options = {
