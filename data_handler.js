@@ -39,8 +39,7 @@ function prepare_fbas_string(timestamp, text) {
 	var js_object = JSON.parse(text);
 	const stellarbeat_nodes = JSON.stringify(js_object[Object.keys(js_object)[0]]);
 	const stellarbeat_orga = JSON.stringify(js_object[Object.keys(js_object)[1]]);
-	var stellarbeat_time_map = JSON.stringify(js_object[Object.keys(js_object)[2]]);
-    stellarbeat_timestamp = JSON.parse(stellarbeat_time_map)["time"];
+	stellarbeat_timestamp = JSON.stringify(js_object[Object.keys(js_object)[3]]).replace(/\"/g, "");
 	console.log(text.length);
 	fbas_from_stellarbeat = stellarbeat_nodes;
     current_nodes = fbas_from_stellarbeat;
