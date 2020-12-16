@@ -25,10 +25,10 @@
     <div class="control-box">
         <label for="to_merge"> Merge nodes by grouping (nodes by the same grouping will count as 1)</label><br>
         <form name="merge">
-          <input name="merge_box" id="merge-orgs" type="radio" value="orgs" checked onclick="determine_merge_selection()"> Organizations
-          <input name="merge_box" id="merge-isps" type="radio" value="isps" onclick="determine_merge_selection()">ISPs
-          <input name="merge_box" id="merge-ctry" type="radio" value="ctry" onclick="determine_merge_selection()">Countries
-          <input name="merge_box" id="no-merge" type="radio" value="none" onclick="determine_merge_selection()">Do not merge
+          <input name="merge_box" id="merge-orgs" type="radio" value="orgs" checked onclick="determine_merge_selection(); maybe_change_analysis()"> Organizations
+          <input name="merge_box" id="merge-isps" type="radio" value="isps" onclick="determine_merge_selection(); maybe_change_analysis()">ISPs
+          <input name="merge_box" id="merge-ctry" type="radio" value="ctry" onclick="determine_merge_selection(); maybe_change_analysis()">Countries
+          <input name="merge_box" id="no-merge" type="radio" value="none" onclick="determine_merge_selection(); maybe_change_analysis()">Do not merge
         </form>
     </div>
 
@@ -47,6 +47,7 @@
         Analyze!
       </button>
       <script>
+      var last_merge_state = document.querySelector('input[name=merge_box]:checked').value;
       window.onload = function() {
         var d = new Date();
         var hour = d.getHours(),
@@ -62,6 +63,7 @@
         document.getElementById('time').value = current_time;
         orgs_btn = document.getElementById('merge-orgs');
         orgs_btn.checked = true;
+        last_merge_state = document.querySelector('input[name=merge_box]:checked').value;
         make_chart_from_csv_url('daily_chart_merged_by_org', 'stellarbeat_daily.csv');
       }
       </script>
@@ -93,7 +95,6 @@
                 if (document.merge.merge_box[i].checked) {
                     should_merge = i;
                     make_chart_from_csv_url('daily_chart_merged_by_org', 'stellarbeat_daily.csv');
-                    maybe_change_analysis();
                     return i;
                 }
              }
@@ -111,6 +112,7 @@
         var current_orgs;
         var timestamp;
         var stellarbeat_timestamp; 
+        var inactive_fbas_nodes;
         should_merge = determine_merge_selection();
         make_chart_from_csv_url('daily_chart_merged_by_org', 'stellarbeat_daily.csv');
       </script>

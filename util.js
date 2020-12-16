@@ -1,8 +1,13 @@
 function maybe_change_analysis() {
-	if (current_nodes || current_orgs) {
-		should_merge = document.getElementById("merge_box").checked;
+    should_merge = merge_selection();
+    // Necessary when we change the grouping before having done an analysis
+    if (!current_nodes || !current_orgs) {
+        return;
+    }
+	if (last_merge_state != should_merge) {
+        last_merge_state = should_merge;
 		var start = performance.now();
-		var promise_results = run(current_nodes, current_orgs, should_merge);
+		var promise_results = run(current_nodes, current_orgs, inactive_fbas_nodes, should_merge);
 		var stop = performance.now();
 		const duration = stop - start;
 		const time_as_secs = duration / 1000;

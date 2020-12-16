@@ -43,6 +43,8 @@ function prepare_fbas_string(timestamp, text) {
     stellarbeat_timestamp = JSON.parse(stellarbeat_time_map)["time"];
 	console.log(text.length);
 	fbas_from_stellarbeat = stellarbeat_nodes;
+    current_nodes = fbas_from_stellarbeat;
+    current_orgs = stellarbeat_orga;
 
 	var inactive_nodes = [];
 	const nodes_as_obj = JSON.parse(fbas_from_stellarbeat);
@@ -52,6 +54,7 @@ function prepare_fbas_string(timestamp, text) {
 		}
 	});
 	const faulty_nodes = JSON.stringify(inactive_nodes);
+    inactive_fbas_nodes = faulty_nodes;
 
 	var should_merge = merge_selection();
 	var start = performance.now();
