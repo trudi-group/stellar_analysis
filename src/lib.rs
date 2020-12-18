@@ -16,10 +16,10 @@ pub fn init_panic_hook() {
 #[wasm_bindgen]
 #[derive(PartialEq)]
 pub enum MergeBy {
+    DoNotMerge,
     Orgs,
     ISPs,
     Countries,
-    DoNotMerge,
 }
 
 #[derive(Serialize, Default)]

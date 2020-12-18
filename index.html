@@ -25,10 +25,10 @@
     <div class="control-box">
         <label for="to_merge"> Merge nodes by grouping (nodes by the same grouping will count as 1)</label><br>
         <form name="merge">
+          <input name="merge_box" id="no-merge" type="radio" value="none" onclick="determine_merge_selection(); maybe_change_analysis()">Raw Nodes (Do not merge)
           <input name="merge_box" id="merge-orgs" type="radio" value="orgs" checked onclick="determine_merge_selection(); maybe_change_analysis()"> Organizations
           <input name="merge_box" id="merge-isps" type="radio" value="isps" onclick="determine_merge_selection(); maybe_change_analysis()">ISPs
           <input name="merge_box" id="merge-ctry" type="radio" value="ctry" onclick="determine_merge_selection(); maybe_change_analysis()">Countries
-          <input name="merge_box" id="no-merge" type="radio" value="none" onclick="determine_merge_selection(); maybe_change_analysis()">Do not merge
         </form>
     </div>
 
@@ -103,10 +103,10 @@
       </script>
       <script charset="utf-8">
         const MergeOptions = {
-            ORGS: 0,
-            ISPS: 1,
-            COUNTRY: 2,
-            NONE: 3
+            NONE: 0,
+            ORGS: 1,
+            ISPS: 2,
+            COUNTRY: 3
         };
         var current_nodes;
         var current_orgs;

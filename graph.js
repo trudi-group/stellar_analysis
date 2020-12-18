@@ -8,7 +8,7 @@ function merge_selection() {
 
 var should_merge = merge_selection();
 const merged_orgs_title = "Merged by organization (nodes by the same organization count as 1)";
-const merged_isps_title = "Merged by isp (nodes by the same isp count as 1)";
+const merged_isps_title = "Merged by ISP (nodes by the same ISP count as 1)";
 const merged_ctry_title = "Merged by country (nodes by the same country count as 1)";
 const raw_title = "Raw nodes (each physical node counts as 1)";
 
