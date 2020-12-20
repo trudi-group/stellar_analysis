@@ -1,8 +1,13 @@
 function call_stellarbeat_on_input() {
 	const date = document.getElementById('date');
-	const time = document.getElementById('time');
-	var url = "https://api.stellarbeat.io/v2/all?at=" + date.value + "T" + time.value;
-	console.log(url);
+	var time = document.getElementById('time');
+    var url = "";
+    if (!time.value) {
+	    url = "https://api.stellarbeat.io/v2/all?at=" + date.value + "T" + "00:00";
+        console.log("url: ", url);
+    } else {
+	    url = "https://api.stellarbeat.io/v2/all?at=" + date.value + "T" + time.value;
+    }
 	timestamp = date.value + "T" + time.value;
 	console.log("input timestamp: ", timestamp );
 	var xhr = new XMLHttpRequest();
