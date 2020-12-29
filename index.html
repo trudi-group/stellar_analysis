@@ -23,12 +23,16 @@
     <h1>Stellar Network Analysis</h1>
 
     <div class="control-box">
-        <label for="to_merge"> Merge nodes by grouping (nodes by the same grouping will count as 1)</label><br>
+        Merge nodes by grouping (nodes by the same grouping will count as 1):
         <form name="merge">
-          <input name="merge_box" id="no-merge" type="radio" value="none" onclick="determine_merge_selection(); maybe_change_analysis()">Raw Nodes (Do not merge)
-          <input name="merge_box" id="merge-orgs" type="radio" value="orgs" checked onclick="determine_merge_selection(); maybe_change_analysis()"> Organizations
-          <input name="merge_box" id="merge-isps" type="radio" value="isps" onclick="determine_merge_selection(); maybe_change_analysis()">ISPs
-          <input name="merge_box" id="merge-ctry" type="radio" value="ctry" onclick="determine_merge_selection(); maybe_change_analysis()">Countries
+          <input name="merge_box" id="no-merge" type="radio" value="none" onclick="determine_merge_selection(); maybe_change_analysis()">
+          <label for="no-merge">Raw nodes (do not merge)</label>
+          <input name="merge_box" id="merge-orgs" type="radio" value="orgs" checked onclick="determine_merge_selection(); maybe_change_analysis()">
+          <label for="merge-orgs">Organizations</label>
+          <input name="merge_box" id="merge-isps" type="radio" value="isps" onclick="determine_merge_selection(); maybe_change_analysis()">
+          <label for="merge-isps">ISPs</label>
+          <input name="merge_box" id="merge-ctry" type="radio" value="ctry" onclick="determine_merge_selection(); maybe_change_analysis()">
+          <label for="merge-ctry">Countries</label>
         </form>
     </div>
 
