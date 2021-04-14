@@ -275,24 +275,6 @@ function make_chart_from_csv_data(canvas_id, csv_data) {
 				hitRadius: 5
 			},
 		},
-        plugins: {
-            zoom: {
-                pan: {
-                    enabled: true,
-                    mode: 'xy',
-                    rangeMin: {
-                        y: 0,
-                    },
-                },
-                zoom: {
-                    enabled: true,
-                    mode: 'xy',
-                    rangeMin: {
-                        y: 0,
-                    },
-                }
-            }
-        },
 		legend: {
 			labels: {
 				filter: function(legendItem, data) {

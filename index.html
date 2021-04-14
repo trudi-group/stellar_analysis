@@ -75,22 +75,17 @@
     <div id="results-box"></div>
 
     <h2>Bulk analysis</h2>
+
     <p>
       The following plot depicts bulk analysis results based on data from <a href="https://stellarbeat.io">stellarbeat.io</a>.
       For each analyzed network snapshot, the plot shows the size of the top tier, the mean, minimum and maximum of all minimal blocking set sizes, and the mean, minimum and maximum of all minimal splitting set sizes.
     </p>
-    <div class="control-box">
-      <button id="reset-btn" title="Set chart to original size after zoom" type="button" onclick="make_chart_from_csv_url('daily_chart_merged_by_org', 'stellarbeat_daily.csv')">
-        Reset chart
-      </button>
-    </div>
+
 
       <div style="height: 500px" width: "300px">
         <canvas id="daily_chart_merged_by_org"></canvas>
       </div>
-      <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3"></script>
-      <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8"></script>
-      <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@0.7.7"></script>
+      <script src="https://cdn.jsdelivr.net/npm/chart.js@2.8.0"></script>
       <script src="https://d3js.org/d3.v5.min.js"></script>
       <script type="text/javascript" src="data_handler.js"></script>
       <script type="text/javascript" src="graph.js"></script>
