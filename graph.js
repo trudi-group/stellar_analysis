@@ -280,8 +280,9 @@ function make_chart_from_csv_data(canvas_id, csv_data) {
                 pan: {
                     enabled: true,
                     mode: 'xy',
-                    threshold: 5,
-                    speed: 10,
+                    rangeMin: {
+                        y: 0,
+                    },
                 },
                 zoom: {
                     enabled: true,
@@ -289,7 +290,6 @@ function make_chart_from_csv_data(canvas_id, csv_data) {
                     rangeMin: {
                         y: 0,
                     },
-                    speed: 0.2,
                 }
             }
         },
