@@ -6,14 +6,36 @@ function maybe_change_analysis() {
     }
 	if (last_merge_state != should_merge) {
         last_merge_state = should_merge;
+
+        const mqs = () => run_mqs(current_nodes, current_orgs, should_merge);
+        const mss = () => run_mss(current_nodes, current_orgs, should_merge);
+        const mbs = () => run_mbs(current_nodes, current_orgs, inactive_fbas_nodes, should_merge);
+        const tt = () => run_tt(current_nodes, current_orgs, should_merge);
+        var mqs_res, mss_res, mbs_res, tt_res;
 		var start = performance.now();
-		var promise_results = run(current_nodes, current_orgs, inactive_fbas_nodes, should_merge);
-		var stop = performance.now();
-		const duration = stop - start;
-		const time_as_secs = duration / 1000;
-		var resolved_results = promise_results.then(function(value) {
-			log_results(timestamp, stellarbeat_timestamp, value, time_as_secs)
-		});
+        Promise.all([
+            mqs(),
+            mss(),
+            mbs(),
+            tt(),
+        ]).then(([mqs_res, mss_res, mbs_res, tt_res]) => {
+            var stop = performance.now();
+            const duration = stop - start;
+            const time_as_secs = duration / 1000;
+            var [mqs, mqs_len, mqs_unused, cache_hit] = split_results(mqs_res);
+            console.log("mqs cache hit: ", cache_hit);
+            var quorum_inter = Object.values(mqs_res)[3];
+            var [mss, mss_len, mss_min, cache_hit] = split_results(mss_res);
+            console.log("mss cache hit: ", cache_hit);
+            var [mbs, mbs_len, mbs_min, cache_hit] = split_results(mbs_res);
+            console.log("mbs cache hit: ", cache_hit);
+            var [tt, tt_len, exists, symm_top_tier, cache_hit] = split_top_tier(tt_res);
+            console.log("tt cache hit: ", cache_hit);
+            var analysis_res = new CompleteResults(mqs, quorum_inter, mqs_len,
+                mbs, mbs_len, mbs_min, mss, mss_len, mss_min,
+                tt, tt_len, exists, symm_top_tier);
+            log_results(timestamp, stellarbeat_timestamp, analysis_res, time_as_secs)
+        }).catch((err) => console.log(err))
 	}
 }
 
@@ -108,7 +130,6 @@ function log_results(timestamp, stellarbeat_timestamp, results, duration) {
 	div.innerHTML = "";
 
 	write_to_div("<b>Results for " + timestamp + " (data from Stellarbeat has timestamp " + stellarbeat_timestamp + ")" + "</b>");
-	console.log("cache hit: ", results.cache_hit);
 	var mqs_output = [JSON.stringify(results.minimal_quorums, null, 4).replace(/\\/g, "").slice(1, -1)];
 
 	var mqs_tooltip = "Minimal sets of nodes that are sufficient to reach agreement.";
@@ -138,7 +159,6 @@ function log_results(timestamp, stellarbeat_timestamp, results, duration) {
 	}
 
 	console.log("analysis duration (s): ", duration);
-	console.log("node_id: ", results.node_id);
 
 	var coll = document.getElementsByClassName("collapsible");
 	coll[0].addEventListener("click", function() {
@@ -249,4 +269,21 @@ function log_results(timestamp, stellarbeat_timestamp, results, duration) {
 			document.body.removeChild(textarea);
 		});
 		}
+}
+
+function CompleteResults(mqs, mqs_inter, mqs_len, mbs, mbs_len, mbs_min, mss, mss_len, mss_min, top_tier, top_tier_size, symmetric_top_tier_exists, symmetric_top_tier) {
+
+    this.minimal_quorums = mqs;
+    this.has_intersection = mqs_inter;
+    this.minimal_quorums_size = mqs_len;
+    this.minimal_blocking_sets = mbs;
+    this.minimal_blocking_sets_size = mbs_len;
+    this.smallest_blocking_set_size = mbs_min;
+    this.minimal_splitting_sets = mss;
+    this.minimal_splitting_sets_size = mss_len;
+    this.smallest_splitting_set_size = mss_min;
+    this.top_tier = top_tier;
+    this.top_tier_size = top_tier_size;
+    this.symmetric_top_tier_exists = symmetric_top_tier_exists;
+    this.symmetric_top_tier = symmetric_top_tier;
 }
