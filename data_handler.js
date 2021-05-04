@@ -77,6 +77,13 @@ async function analyze_and_update_results_box() {
     show_mqs_results(mqs, mqs_len, has_quorum_intersection);
     await tick();
 
+    console.log("tt analysis...");
+	let tt_res = await run_tt(fbas_from_stellarbeat, stellarbeat_orgs, should_merge);
+    var [tt, tt_len, symm_tt_exists, symm_tt, cache_hit] = split_top_tier(tt_res);
+    console.log("tt cache hit: ", cache_hit);
+    show_tt_results(tt, tt_len, symm_tt_exists, symm_tt);
+    await tick();
+
     console.log("mbs analysis...");
     let mbs_res = await run_mbs(fbas_from_stellarbeat, stellarbeat_orgs, inactive_fbas_nodes, should_merge);
     var [mbs, mbs_len, mbs_min, cache_hit] = split_results(mbs_res);
@@ -89,13 +96,6 @@ async function analyze_and_update_results_box() {
     var [mss, mss_len, mss_min, cache_hit] = split_results(mss_res);
     console.log("mss cache hit: ", cache_hit);
     show_mss_results(mss, mss_len, mss_min);
-    await tick();
-
-    console.log("tt analysis...");
-	let tt_res = await run_tt(fbas_from_stellarbeat, stellarbeat_orgs, should_merge);
-    var [tt, tt_len, symm_tt_exists, symm_tt, cache_hit] = split_top_tier(tt_res);
-    console.log("tt cache hit: ", cache_hit);
-    show_tt_results(tt, tt_len, symm_tt_exists, symm_tt);
     await tick();
 
     var stop = performance.now();
