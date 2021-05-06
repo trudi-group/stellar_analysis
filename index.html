@@ -122,29 +122,29 @@
       </script>
 
       <script type="module">
-        import init, {analyse_minimal_quorums, analyse_minimal_splitting_sets, analyse_minimal_blocking_sets, analyse_top_tier, init_panic_hook} from './pkg/stellar_analysis.js';
+        import init, {analyze_minimal_quorums, analyze_minimal_splitting_sets, analyze_minimal_blocking_sets, analyze_top_tier, init_panic_hook} from './pkg/stellar_analysis.js';
       async function initialise() {
         await init();
 		init_panic_hook();
       }
       initialise();
     async function run_mqs(fbas, orgs, should_merge) {
-      var results = analyse_minimal_quorums(fbas, orgs, should_merge)
+      var results = analyze_minimal_quorums(fbas, orgs, should_merge)
       return results
     }
     window.run_mqs = run_mqs
     async function run_mss(fbas, orgs, should_merge) {
-      var results = analyse_minimal_splitting_sets(fbas, orgs, should_merge)
+      var results = analyze_minimal_splitting_sets(fbas, orgs, should_merge)
       return results
     }
     window.run_mss = run_mss
     async function run_mbs(fbas, orgs, faulty, should_merge) {
-      var results = analyse_minimal_blocking_sets(fbas, orgs, faulty, should_merge)
+      var results = analyze_minimal_blocking_sets(fbas, orgs, faulty, should_merge)
       return results
     }
     window.run_mbs = run_mbs
     async function run_tt(fbas, orgs, should_merge) {
-      var results = analyse_top_tier(fbas, orgs, should_merge)
+      var results = analyze_top_tier(fbas, orgs, should_merge)
       return results
     }
     window.run_tt = run_tt

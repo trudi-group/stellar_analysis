@@ -1,7 +1,7 @@
 [package]
 name = "stellar_analysis"
 version = "0.3.0"
-authors = ["Charmaine Ndolo <Charmaine.Ndolo@hu-berlin.de>"]
+authors = ["Charmaine Ndolo <Charmaine.Ndolo@hu-berlin.de>", "Martin Florian <martin.florian@hu-berlin.de>"]
 edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -25,3 +25,7 @@ lazy_static = "1.4.0"
 [dependencies.wasm-bindgen]
 version = "^0.2"
 features = ["serde-serialize"]
+
+[dev-dependencies]
+wasm-bindgen-test = "0.3.0"
+js-sys = "0.3.50"

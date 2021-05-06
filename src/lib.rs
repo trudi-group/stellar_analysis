@@ -160,7 +160,7 @@ fn get_grouping_to_merge_by(
 }
 
 #[wasm_bindgen]
-pub fn analyse_minimal_quorums(json_fbas: String, json_orgs: String, merge_by: MergeBy) -> JsValue {
+pub fn analyze_minimal_quorums(json_fbas: String, json_orgs: String, merge_by: MergeBy) -> JsValue {
     let fbas: Fbas = Fbas::from_json_str(&json_fbas).to_standard_form();
     let grouping = get_grouping_to_merge_by(&fbas, json_fbas, json_orgs, merge_by);
     let cache = &mut ANALYSIS_CACHE.lock().unwrap();
@@ -184,7 +184,7 @@ pub fn analyse_minimal_quorums(json_fbas: String, json_orgs: String, merge_by: M
 }
 
 #[wasm_bindgen]
-pub fn analyse_minimal_splitting_sets(
+pub fn analyze_minimal_splitting_sets(
     json_fbas: String,
     json_orgs: String,
     merge_by: MergeBy,
@@ -212,7 +212,7 @@ pub fn analyse_minimal_splitting_sets(
 }
 
 #[wasm_bindgen]
-pub fn analyse_minimal_blocking_sets(
+pub fn analyze_minimal_blocking_sets(
     json_fbas: String,
     json_orgs: String,
     faulty_nodes: String,
@@ -241,7 +241,7 @@ pub fn analyse_minimal_blocking_sets(
 }
 
 #[wasm_bindgen]
-pub fn analyse_top_tier(json_fbas: String, json_orgs: String, merge_by: MergeBy) -> JsValue {
+pub fn analyze_top_tier(json_fbas: String, json_orgs: String, merge_by: MergeBy) -> JsValue {
     let fbas: Fbas = Fbas::from_json_str(&json_fbas).to_standard_form();
     let grouping = get_grouping_to_merge_by(&fbas, json_fbas, json_orgs, merge_by);
     let cache = &mut ANALYSIS_CACHE.lock().unwrap();
@@ -277,4 +277,64 @@ pub fn analyse_top_tier(json_fbas: String, json_orgs: String, merge_by: MergeBy)
         cache_hit,
     };
     JsValue::from_serde(&results).unwrap()
+}
+
+#[cfg(test)]
+mod tests {
+    use wasm_bindgen_test::*;
+    use js_sys::JSON;
+    use super::*;
+
+    lazy_static! {
+        static ref TEST_FBAS_JSON: String = r#"[
+            {
+                "publicKey": "n0",
+                "quorumSet": { "threshold": 3, "validators": ["n0", "n1", "n2", "n3"] }
+            },
+            {
+                "publicKey": "n1",
+                "quorumSet": { "threshold": 3, "validators": ["n0", "n1", "n2", "n3"] }
+            },
+            {
+                "publicKey": "n2",
+                "quorumSet": { "threshold": 3, "validators": ["n0", "n1", "n2", "n3"] }
+            },
+            {
+                "publicKey": "n3",
+                "quorumSet": { "threshold": 3, "validators": ["n0", "n1", "n2", "n3"] }
+            }
+        ]"#.to_string();
+
+        static ref TEST_ORGS_JSON: String = "".to_string();
+    }
+
+    #[wasm_bindgen_test]
+    fn test_analyze_minimal_quorums() {
+
+        let result = analyze_minimal_quorums(TEST_FBAS_JSON.clone(), TEST_ORGS_JSON.clone(), MergeBy::DoNotMerge);
+
+        let actual = JSON::stringify(
+            &result
+        ).unwrap().as_string().unwrap();
+
+        let expected = "{\"result\":\"[[\\\"n0\\\",\\\"n1\\\",\\\"n2\\\"],[\\\"n0\\\",\\\"n1\\\",\\\"n3\\\"],[\\\"n0\\\",\\\"n2\\\",\\\"n3\\\"],[\\\"n1\\\",\\\"n2\\\",\\\"n3\\\"]]\",\"size\":4,\"min\":0,\"quorum_intersection\":true,\"cache_hit\":true}";
+
+        assert_eq!(expected, actual);
+    }
+
+    #[wasm_bindgen_test]
+    fn test_analyze_minimal_blocking_sets() {
+
+        let faulty_nodes = "[\"n1\"]".to_string();
+
+        let result = analyze_minimal_blocking_sets(TEST_FBAS_JSON.clone(), TEST_ORGS_JSON.clone(), faulty_nodes, MergeBy::DoNotMerge);
+
+        let actual = JSON::stringify(
+            &result
+        ).unwrap().as_string().unwrap();
+
+        let expected = "{\"result\":\"[[\\\"n0\\\"],[\\\"n2\\\"],[\\\"n3\\\"]]\",\"size\":3,\"min\":1,\"quorum_intersection\":null,\"cache_hit\":false}";
+
+        assert_eq!(expected, actual);
+    }
 }
