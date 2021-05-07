@@ -71,30 +71,26 @@ async function analyze_and_update_results_box() {
 
     console.log("mqs analysis...");
     let mqs_res = await run_mqs(fbas_from_stellarbeat, stellarbeat_orgs, should_merge);
-    var [mqs, mqs_len, mqs_unused, cache_hit] = split_results(mqs_res);
-    console.log("mqs cache hit: ", cache_hit);
+    var [mqs, mqs_len, mqs_min] = split_results(mqs_res);
     var has_quorum_intersection = Object.values(mqs_res)[3];
     show_mqs_results(mqs, mqs_len, has_quorum_intersection);
     await tick();
 
     console.log("tt analysis...");
 	let tt_res = await run_tt(fbas_from_stellarbeat, stellarbeat_orgs, should_merge);
-    var [tt, tt_len, symm_tt_exists, symm_tt, cache_hit] = split_top_tier(tt_res);
-    console.log("tt cache hit: ", cache_hit);
-    show_tt_results(tt, tt_len, symm_tt_exists, symm_tt);
+    var [tt, tt_len, symm_tt] = split_top_tier(tt_res);
+    show_tt_results(tt, tt_len, symm_tt);
     await tick();
 
     console.log("mbs analysis...");
     let mbs_res = await run_mbs(fbas_from_stellarbeat, stellarbeat_orgs, inactive_fbas_nodes, should_merge);
-    var [mbs, mbs_len, mbs_min, cache_hit] = split_results(mbs_res);
-    console.log("mbs cache hit: ", cache_hit);
+    var [mbs, mbs_len, mbs_min] = split_results(mbs_res);
     show_mbs_results(mbs, mbs_len, mbs_min);
     await tick();
 
     console.log("mss analysis...");
 	let mss_res = await run_mss(fbas_from_stellarbeat, stellarbeat_orgs, should_merge);
-    var [mss, mss_len, mss_min, cache_hit] = split_results(mss_res);
-    console.log("mss cache hit: ", cache_hit);
+    var [mss, mss_len, mss_min] = split_results(mss_res);
     show_mss_results(mss, mss_len, mss_min);
     await tick();
 
@@ -109,20 +105,12 @@ function split_results(result) {
     var value = Object.values(result)[0];
     var size = Object.values(result)[1];
     var min = Object.values(result)[2];
-    var cache_hit = Object.values(result)[4];
-    return [value, size, min, cache_hit];
+    return [value, size, min];
 }
 
 function split_top_tier(result) {
     var value = Object.values(result)[0];
     var size = Object.values(result)[1];
     var symm_top_tier = Object.values(result)[2];
-    var cache_hit = Object.values(result)[3];
-    var symmetric_top_tier_exists;
-    if (symm_top_tier === "") {
-        symmetric_top_tier_exists = false;
-    } else {
-        symmetric_top_tier_exists = true;
-    }
-    return [value, size, symmetric_top_tier_exists, symm_top_tier, cache_hit];
+    return [value, size, symm_top_tier];
 }

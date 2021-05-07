@@ -158,7 +158,7 @@ function show_results_box_title(timestamp, stellarbeat_timestamp) {
 }
 
 function show_mqs_results(mqs, mqs_len, has_quorum_intersection) {
-	var mqs_output = [JSON.stringify(mqs, null, 4).replace(/\\/g, "").slice(1, -1)];
+	var mqs_output = JSON.stringify(mqs, null, 4);
 
 	var mqs_tooltip = "Minimal sets of nodes that are sufficient to reach agreement.";
 	if (has_quorum_intersection) {
@@ -169,27 +169,26 @@ function show_mqs_results(mqs, mqs_len, has_quorum_intersection) {
 }
 
 function show_mbs_results(mbs, mbs_len, mbs_min) {
-	var mbs_output = [JSON.stringify(mbs, null, 4).replace(/\\/g, "").slice(1, -1)];
+	var mbs_output = JSON.stringify(mbs, null, 4);
 	var mbs_tooltip = "Control over any of these sets is sufficient to compromise the liveness of all nodes and to censor future transactions.";
 	create_buttons_in_div("blocking sets |", " We found "+ mbs_len + " minimal blocking sets. The smallest one has size " + mbs_min + ".", mbs_output, mbs_tooltip);
 }
 
 function show_mss_results(mss, mss_len, mss_min) {
-	var mss_output = [JSON.stringify(mss, null, 4).replace(/\\/g, "").slice(1, -1)];
+	var mss_output = JSON.stringify(mss, null, 4);
 	var mss_tooltip = "Control over any of these sets is sufficient to compromise safety by undermining the quorum intersection of at least two quorums.";
 	create_buttons_in_div("splitting sets |", " We found "+ mss_len + " minimal blocking sets. The smallest one has size " + mss_min + ".", mss_output, mss_tooltip);
 }
 
-function show_tt_results(tt, tt_len, symm_tt_exists, symm_tt) {
+function show_tt_results(tt, tt_len, symm_tt) {
 	var tt = [JSON.stringify(tt)];
 	var tt_tooltip = "These are the nodes out of which all minimal quorums, minimal blocking sets and minimal splitting sets are formed.";
 	create_buttons_in_div("top tier 👑 |", " There are " + tt_len +  " nodes in the top tier.", tt, tt_tooltip);
 
-	if (symm_tt_exists) {
-		var symmetric_top_tier = symm_tt.slice(1, -1);
-		symmetric_top_tier = JSON.stringify(JSON.parse(symmetric_top_tier), null, 4);
+	if (symm_tt) {
+		symm_tt_string = JSON.stringify(symm_tt, null, 4);
 		var sc_tooltip = "All top tier nodes have identical quorum sets."
-		create_buttons_in_div_alter("The top tier is", " symmetric", ".", symmetric_top_tier, sc_tooltip);
+		create_buttons_in_div_alter("The top tier is", " symmetric", ".", symm_tt_string, sc_tooltip);
 	}
 }
 
