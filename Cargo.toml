@@ -1,6 +1,6 @@
 [package]
 name = "stellar_analysis"
-version = "0.3.0"
+version = "0.4.0"
 authors = ["Charmaine Ndolo <Charmaine.Ndolo@hu-berlin.de>", "Martin Florian <martin.florian@hu-berlin.de>"]
 edition = "2018"
 
