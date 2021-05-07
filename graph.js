@@ -302,7 +302,7 @@ function make_chart_from_csv_data(canvas_id, csv_data) {
 			var label = chart.data.labels[clickedElementindex];
 			var value = chart.data.datasets[clickedDatasetIndex].data[clickedElementindex];     
 			console.log("Clicked: " + label + " - " + value);
-			call_stellarbeat_on_click(label);
+			get_and_analyze_stellarbeat_data_via_click(label);
 		}
 	};
 }

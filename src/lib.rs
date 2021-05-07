@@ -1,20 +1,68 @@
 use fbas_analyzer::*;
 use wasm_bindgen::prelude::*;
+use web_sys::console;
+
+use std::collections::HashMap;
+use std::sync::Mutex;
+
+#[macro_use]
+extern crate lazy_static;
+
 #[macro_use]
 extern crate serde_derive;
 
-use std::collections::HashMap;
-#[macro_use]
-extern crate lazy_static;
-use std::sync::Mutex;
+lazy_static! {
+    static ref ANALYSIS_CACHE: Mutex<HashMap<Fbas, Analysis>> = {
+        let m = HashMap::new();
+        Mutex::new(m)
+    };
+}
 
-#[wasm_bindgen]
-pub fn init_panic_hook() {
-    console_error_panic_hook::set_once();
+macro_rules! get_analysis_object {
+    ($fbas:expr, $cache:expr) => {{
+        let fbas = $fbas;
+        let cache = $cache;
+        if !cache.contains_key(&fbas) {
+            console::log_1(&"lib: Creating new analysis object.".into());
+            cache.insert(fbas.clone(), Analysis::new(fbas));
+        } else {
+            console::log_1(
+                &"lib: Reusing existing analysis object (might have cached results).".into(),
+            );
+        }
+        cache.get(fbas).unwrap()
+    }};
+}
+
+macro_rules! maybe_merge {
+    ($result:expr, $groupings:expr) => {{
+        if let Some(groupings) = $groupings {
+            $result.merged_by_group(&groupings)
+        } else {
+            $result
+        }
+    }};
+}
+
+#[derive(Serialize, Default)]
+/// Used for mqs, mss, mbs
+struct SetsReport {
+    result: Vec<Vec<String>>,
+    size: usize,
+    min: usize,
+    /// only for mqs
+    quorum_intersection: Option<bool>,
+}
+
+#[derive(Serialize, Default)]
+struct TopTierReport {
+    top_tier: Vec<String>,
+    top_tier_size: usize,
+    symmetric_top_tier: Option<PrettyQuorumSet>,
 }
 
 #[wasm_bindgen]
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone, Copy)]
 pub enum MergeBy {
     DoNotMerge,
     Orgs,
@@ -22,208 +70,220 @@ pub enum MergeBy {
     Countries,
 }
 
-#[derive(Serialize, Default)]
-pub struct AnalysedValues {
-    minimal_quorums: String,
-    minimal_quorums_size: usize,
-    has_intersection: bool,
-    minimal_blocking_sets: String,
-    minimal_blocking_sets_size: usize,
-    smallest_blocking_set_size: usize,
-    minimal_splitting_sets: String,
-    minimal_splitting_sets_size: usize,
-    smallest_splitting_set_size: usize,
-    top_tier: Vec<String>,
-    top_tier_size: usize,
-    symmetric_top_tier_exists: bool,
-    symmetric_top_tier: String,
-    cache_hit: bool,
-}
+#[wasm_bindgen]
+pub fn analyze_minimal_quorums(json_fbas: String, json_orgs: String, merge_by: MergeBy) -> JsValue {
+    let fbas = get_fbas(&json_fbas);
+    let groupings = get_groupings_to_merge_by(&fbas, json_fbas, json_orgs, merge_by);
+    let cache = &mut ANALYSIS_CACHE.lock().unwrap();
+    let analysis = get_analysis_object!(&fbas, cache);
 
-#[derive(Debug, Clone, Default)]
-struct CustomResultsStruct {
-    minimal_quorums: NodeIdSetVecResult,
-    minimal_quorums_size: usize,
-    minimal_blocking_sets: NodeIdSetVecResult,
-    minimal_splitting_sets: NodeIdSetVecResult,
-    top_tier: NodeIdSetResult,
-    top_tier_size: usize,
-    has_quorum_intersection: bool,
-    symmetric_clusters: Vec<QuorumSet>,
-}
+    let mqs = maybe_merge!(analysis.minimal_quorums(), &groupings).minimal_sets();
+    let qi = analysis.has_quorum_intersection();
 
-fn do_analysis(fbas: &Fbas) -> CustomResultsStruct {
-    let analysis = Analysis::new(fbas);
-
-    CustomResultsStruct {
-        minimal_quorums: analysis.minimal_quorums(),
-        minimal_quorums_size: analysis.minimal_quorums().len(),
-        minimal_blocking_sets: analysis.minimal_blocking_sets(),
-        minimal_splitting_sets: analysis.minimal_splitting_sets(),
-        top_tier: analysis.top_tier(),
-        top_tier_size: analysis.top_tier().len(),
-        has_quorum_intersection: analysis.has_quorum_intersection(),
-        symmetric_clusters: analysis.symmetric_clusters(),
-    }
-}
-
-lazy_static! {
-    static ref RESULTS_CACHE: Mutex<HashMap<Fbas, CustomResultsStruct>> = {
-        let m = HashMap::new();
-        Mutex::new(m)
+    let results = SetsReport {
+        size: mqs.len(),
+        min: mqs.min(),
+        result: mqs.into_pretty_vec_vec(&fbas, groupings.as_ref()),
+        quorum_intersection: Some(qi),
     };
-}
-
-fn fbas_has_been_analysed(fbas: &Fbas) -> Option<CustomResultsStruct> {
-    let cache = RESULTS_CACHE.lock().unwrap();
-    let value = cache.get(&fbas);
-    if let Some(cached_results) = value {
-        Some(cached_results.clone())
-    } else {
-        None
-    }
+    JsValue::from_serde(&results).unwrap()
 }
 
 #[wasm_bindgen]
-pub fn fbas_analysis(
+pub fn analyze_minimal_blocking_sets(
     json_fbas: String,
     json_orgs: String,
     faulty_nodes: String,
     merge_by: MergeBy,
 ) -> JsValue {
     let fbas: Fbas = Fbas::from_json_str(&json_fbas).to_standard_form();
-    let grouping = match merge_by {
+    let groupings = get_groupings_to_merge_by(&fbas, json_fbas, json_orgs, merge_by);
+    let cache = &mut ANALYSIS_CACHE.lock().unwrap();
+    let analysis = get_analysis_object!(&fbas, cache);
+
+    let inactive_nodes: Vec<String> = serde_json::from_str(&faulty_nodes).unwrap();
+    let inactive_nodes: Vec<&str> = inactive_nodes.iter().map(|s| s.as_ref()).collect();
+
+    let mbs_without_faulty_unmerged =
+        analysis
+            .minimal_blocking_sets()
+            .without_nodes_pretty(&inactive_nodes, &fbas, None);
+    let mbs_without_faulty = maybe_merge!(mbs_without_faulty_unmerged, &groupings).minimal_sets();
+
+    let results = SetsReport {
+        size: mbs_without_faulty.len(),
+        min: mbs_without_faulty.min(),
+        result: mbs_without_faulty.into_pretty_vec_vec(&fbas, groupings.as_ref()),
+        quorum_intersection: None,
+    };
+    JsValue::from_serde(&results).unwrap()
+}
+
+#[wasm_bindgen]
+pub fn analyze_minimal_splitting_sets(
+    json_fbas: String,
+    json_orgs: String,
+    merge_by: MergeBy,
+) -> JsValue {
+    let fbas: Fbas = Fbas::from_json_str(&json_fbas).to_standard_form();
+    let groupings = get_groupings_to_merge_by(&fbas, json_fbas, json_orgs, merge_by);
+    let cache = &mut ANALYSIS_CACHE.lock().unwrap();
+    let analysis = get_analysis_object!(&fbas, cache);
+
+    let mss = maybe_merge!(analysis.minimal_splitting_sets(), &groupings).minimal_sets();
+
+    let results = SetsReport {
+        size: mss.len(),
+        min: mss.min(),
+        result: mss.into_pretty_vec_vec(&fbas, groupings.as_ref()),
+        quorum_intersection: None,
+    };
+    JsValue::from_serde(&results).unwrap()
+}
+
+#[wasm_bindgen]
+pub fn analyze_top_tier(json_fbas: String, json_orgs: String, merge_by: MergeBy) -> JsValue {
+    let fbas: Fbas = Fbas::from_json_str(&json_fbas).to_standard_form();
+    let groupings = get_groupings_to_merge_by(&fbas, json_fbas, json_orgs, merge_by);
+    let cache = &mut ANALYSIS_CACHE.lock().unwrap();
+    let analysis = get_analysis_object!(&fbas, cache);
+
+    let tt = maybe_merge!(analysis.top_tier(), &groupings);
+
+    let symm_tt = analysis
+        .symmetric_top_tier()
+        .map(|qset| qset.into_pretty_quorum_set(&fbas, groupings.as_ref()));
+
+    let results = TopTierReport {
+        top_tier_size: tt.len(),
+        top_tier: tt.into_pretty_vec(&fbas, groupings.as_ref()),
+        symmetric_top_tier: symm_tt,
+    };
+    JsValue::from_serde(&results).unwrap()
+}
+
+#[wasm_bindgen]
+pub fn init_panic_hook() {
+    console_error_panic_hook::set_once();
+}
+
+fn get_fbas(json_fbas: &str) -> Fbas {
+    Fbas::from_json_str(json_fbas).to_standard_form()
+}
+
+fn get_groupings_to_merge_by(
+    fbas: &Fbas,
+    json_fbas: String,
+    json_orgs: String,
+    merge_by: MergeBy,
+) -> Option<Groupings> {
+    match merge_by {
         MergeBy::Orgs => Some(Groupings::organizations_from_json_str(&json_orgs, &fbas)),
         MergeBy::ISPs => Some(Groupings::isps_from_json_str(&json_fbas, &fbas)),
         MergeBy::Countries => Some(Groupings::countries_from_json_str(&json_fbas, &fbas)),
         MergeBy::DoNotMerge => None,
-    };
-    let inactive_nodes: Vec<String> = serde_json::from_str(&faulty_nodes).unwrap();
-    let inactive_nodes: Vec<&str> = inactive_nodes.iter().map(|s| s.as_ref()).collect();
-    let mut cache_hit = false;
-    let analysis_results = if let Some(cached_results) = fbas_has_been_analysed(&fbas) {
-        cache_hit = true;
-        cached_results
-    } else {
-        let new_results = do_analysis(&fbas);
-        let mut results_cache = RESULTS_CACHE.lock().unwrap();
-        results_cache.insert(fbas.clone(), new_results.clone());
-        new_results
-    };
+    }
+}
 
-    let min_mqs = if merge_by != MergeBy::DoNotMerge {
-        analysis_results
-            .minimal_quorums
-            .merged_by_group(&grouping.clone().unwrap())
-            .minimal_sets()
-    } else {
-        analysis_results.minimal_quorums.minimal_sets()
-    };
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use js_sys::JSON;
+    use wasm_bindgen_test::*;
 
-    let (minimal_quorums_size, minimal_quorums) = if merge_by != MergeBy::DoNotMerge {
-        (
-            min_mqs.len(),
-            min_mqs.into_pretty_string(&fbas, grouping.as_ref()),
-        )
-    } else {
-        (min_mqs.len(), min_mqs.into_pretty_string(&fbas, None))
-    };
+    lazy_static! {
+        static ref TEST_FBAS_JSON: String = r#"[
+            {
+                "publicKey": "n0",
+                "quorumSet": { "threshold": 3, "validators": ["n0", "n1", "n2", "n3"] }
+            },
+            {
+                "publicKey": "n1",
+                "quorumSet": { "threshold": 3, "validators": ["n0", "n1", "n2", "n3"] }
+            },
+            {
+                "publicKey": "n2",
+                "quorumSet": { "threshold": 3, "validators": ["n0", "n1", "n2", "n3"] }
+            },
+            {
+                "publicKey": "n3",
+                "quorumSet": { "threshold": 3, "validators": ["n0", "n1", "n2", "n3"] }
+            }
+        ]"#
+        .to_string();
+        static ref TEST_ORGS_JSON: String = r#"[
+            {
+                "name": "Team Even",
+                "validators": [ "n0", "n2" ]
+            },
+            {
+                "name": "Team Odd",
+                "validators": [ "n1", "n3" ]
+            }
+            ]"#
+        .to_string();
+    }
 
-    let min_mbs_without_faulty =
-        analysis_results
-            .minimal_blocking_sets
-            .without_nodes_pretty(&inactive_nodes, &fbas, None);
+    #[wasm_bindgen_test]
+    fn test_analyze_minimal_quorums() {
+        let result = analyze_minimal_quorums(
+            TEST_FBAS_JSON.clone(),
+            TEST_ORGS_JSON.clone(),
+            MergeBy::DoNotMerge,
+        );
 
-    let min_mbs = if merge_by != MergeBy::DoNotMerge {
-        min_mbs_without_faulty
-            .merged_by_group(&grouping.clone().unwrap())
-            .minimal_sets()
-    } else {
-        min_mbs_without_faulty.minimal_sets()
-    };
-    let (minimal_blocking_sets_size, smallest_blocking_set_size, minimal_blocking_sets) =
-        if merge_by != MergeBy::DoNotMerge {
-            (
-                min_mbs.len(),
-                min_mbs.min(),
-                min_mbs.into_pretty_string(&fbas, grouping.as_ref()),
-            )
-        } else {
-            (
-                min_mbs.len(),
-                min_mbs.min(),
-                min_mbs.into_pretty_string(&fbas, None),
-            )
-        };
+        let actual = JSON::stringify(&result).unwrap().as_string().unwrap();
 
-    let min_mss = if merge_by != MergeBy::DoNotMerge {
-        analysis_results
-            .minimal_splitting_sets
-            .merged_by_group(&grouping.clone().unwrap())
-            .minimal_sets()
-    } else {
-        analysis_results.minimal_splitting_sets.minimal_sets()
-    };
-    let (minimal_splitting_sets_size, smallest_splitting_set_size, minimal_splitting_sets) =
-        if merge_by != MergeBy::DoNotMerge {
-            (
-                min_mss.len(),
-                min_mss.min(),
-                min_mss.into_pretty_string(&fbas, grouping.as_ref()),
-            )
-        } else {
-            (
-                min_mss.len(),
-                min_mss.min(),
-                min_mss.into_pretty_string(&fbas, None),
-            )
-        };
+        let expected = "{\"result\":[[\"n0\",\"n1\",\"n2\"],[\"n0\",\"n1\",\"n3\"],[\"n0\",\"n2\",\"n3\"],[\"n1\",\"n2\",\"n3\"]],\"size\":4,\"min\":3,\"quorum_intersection\":true}";
 
-    let top_tier = if merge_by != MergeBy::DoNotMerge {
-        analysis_results
-            .top_tier
-            .merged_by_group(&grouping.clone().unwrap())
-            .into_pretty_vec(&fbas, grouping.as_ref())
-    } else {
-        analysis_results.top_tier.into_pretty_vec(&fbas, None)
-    };
+        assert_eq!(expected, actual);
+    }
 
-    let has_intersection = analysis_results.has_quorum_intersection;
-    let top_tier_size = top_tier.len();
+    #[wasm_bindgen_test]
+    fn test_analyze_minimal_blocking_sets() {
+        let faulty_nodes = "[\"n1\"]".to_string();
 
-    let sc = if merge_by != MergeBy::DoNotMerge {
-        grouping
-            .clone()
-            .unwrap()
-            .merge_quorum_sets(analysis_results.symmetric_clusters)
-    } else {
-        analysis_results.symmetric_clusters
-    };
-    let (symmetric_top_tier, symmetric_top_tier_exists) = if has_intersection && (sc.len() == 1) {
-        if merge_by != MergeBy::DoNotMerge {
-            (sc.into_pretty_string(&fbas, grouping.as_ref()), true)
-        } else {
-            (sc.into_pretty_string(&fbas, None), true)
-        }
-    } else {
-        (String::default(), false)
-    };
+        let result = analyze_minimal_blocking_sets(
+            TEST_FBAS_JSON.clone(),
+            TEST_ORGS_JSON.clone(),
+            faulty_nodes,
+            MergeBy::DoNotMerge,
+        );
 
-    let analysed_values = AnalysedValues {
-        minimal_quorums,
-        minimal_quorums_size,
-        has_intersection,
-        minimal_blocking_sets,
-        minimal_blocking_sets_size,
-        smallest_blocking_set_size,
-        minimal_splitting_sets,
-        minimal_splitting_sets_size,
-        smallest_splitting_set_size,
-        top_tier,
-        top_tier_size,
-        symmetric_top_tier_exists,
-        symmetric_top_tier,
-        cache_hit,
-    };
-    JsValue::from_serde(&analysed_values).unwrap()
+        let actual = JSON::stringify(&result).unwrap().as_string().unwrap();
+
+        let expected = "{\"result\":[[\"n0\"],[\"n2\"],[\"n3\"]],\"size\":3,\"min\":1,\"quorum_intersection\":null}";
+
+        assert_eq!(expected, actual);
+    }
+
+    #[wasm_bindgen_test]
+    fn test_analyze_minimal_splitting_sets() {
+        let result = analyze_minimal_splitting_sets(
+            TEST_FBAS_JSON.clone(),
+            TEST_ORGS_JSON.clone(),
+            MergeBy::Orgs,
+        );
+
+        let actual = JSON::stringify(&result).unwrap().as_string().unwrap();
+
+        let expected = "{\"result\":[[\"Team Even\"],[\"Team Odd\"]],\"size\":2,\"min\":1,\"quorum_intersection\":null}";
+
+        assert_eq!(expected, actual);
+    }
+
+    #[wasm_bindgen_test]
+    fn test_analyze_top_tier() {
+        let result = analyze_top_tier(
+            TEST_FBAS_JSON.clone(),
+            TEST_ORGS_JSON.clone(),
+            MergeBy::DoNotMerge,
+        );
+
+        let actual = JSON::stringify(&result).unwrap().as_string().unwrap();
+
+        let expected = "{\"top_tier\":[\"n0\",\"n1\",\"n2\",\"n3\"],\"top_tier_size\":4,\"symmetric_top_tier\":{\"threshold\":3,\"validators\":[\"n0\",\"n1\",\"n2\",\"n3\"]}}";
+
+        assert_eq!(expected, actual);
+    }
 }

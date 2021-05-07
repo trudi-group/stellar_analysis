@@ -44,3 +44,7 @@ This section covers how this tool can be deployed to your web server instead.
 	`npm i stellar_analysis`
 
 The analyses performed here are powered by the [fbas_analyzer](https://github.com/wiberlin/fbas_analyzer) tool/library.
+
+## Running tests
+
+For Rust parts: `wasm-pack test --node`
