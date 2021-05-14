@@ -22,6 +22,7 @@ macro_rules! get_analysis_object {
     ($fbas:expr, $cache:expr) => {{
         let fbas = $fbas;
         let cache = $cache;
+        let mut cache_hit = false;
         if !cache.contains_key(&fbas) {
             console::log_1(&"lib: Creating new analysis object.".into());
             cache.insert(fbas.clone(), Analysis::new(fbas));
@@ -29,8 +30,9 @@ macro_rules! get_analysis_object {
             console::log_1(
                 &"lib: Reusing existing analysis object (might have cached results).".into(),
             );
+            cache_hit = true;
         }
-        cache.get(fbas).unwrap()
+        (cache.get(fbas).unwrap(), cache_hit)
     }};
 }
 
@@ -59,6 +61,7 @@ struct TopTierReport {
     top_tier: Vec<String>,
     top_tier_size: usize,
     symmetric_top_tier: Option<PrettyQuorumSet>,
+    cache_hit: bool,
 }
 
 #[wasm_bindgen]
@@ -75,7 +78,7 @@ pub fn analyze_minimal_quorums(json_fbas: String, json_orgs: String, merge_by: M
     let fbas = get_fbas(&json_fbas);
     let groupings = get_groupings_to_merge_by(&fbas, json_fbas, json_orgs, merge_by);
     let cache = &mut ANALYSIS_CACHE.lock().unwrap();
-    let analysis = get_analysis_object!(&fbas, cache);
+    let (analysis, _) = get_analysis_object!(&fbas, cache);
 
     let mqs = maybe_merge!(analysis.minimal_quorums(), &groupings).minimal_sets();
     let qi = analysis.has_quorum_intersection();
@@ -99,7 +102,7 @@ pub fn analyze_minimal_blocking_sets(
     let fbas: Fbas = Fbas::from_json_str(&json_fbas).to_standard_form();
     let groupings = get_groupings_to_merge_by(&fbas, json_fbas, json_orgs, merge_by);
     let cache = &mut ANALYSIS_CACHE.lock().unwrap();
-    let analysis = get_analysis_object!(&fbas, cache);
+    let (analysis, _) = get_analysis_object!(&fbas, cache);
 
     let inactive_nodes: Vec<String> = serde_json::from_str(&faulty_nodes).unwrap();
     let inactive_nodes: Vec<&str> = inactive_nodes.iter().map(|s| s.as_ref()).collect();
@@ -128,7 +131,7 @@ pub fn analyze_minimal_splitting_sets(
     let fbas: Fbas = Fbas::from_json_str(&json_fbas).to_standard_form();
     let groupings = get_groupings_to_merge_by(&fbas, json_fbas, json_orgs, merge_by);
     let cache = &mut ANALYSIS_CACHE.lock().unwrap();
-    let analysis = get_analysis_object!(&fbas, cache);
+    let (analysis, _) = get_analysis_object!(&fbas, cache);
 
     let mss = maybe_merge!(analysis.minimal_splitting_sets(), &groupings).minimal_sets();
 
@@ -146,7 +149,7 @@ pub fn analyze_top_tier(json_fbas: String, json_orgs: String, merge_by: MergeBy)
     let fbas: Fbas = Fbas::from_json_str(&json_fbas).to_standard_form();
     let groupings = get_groupings_to_merge_by(&fbas, json_fbas, json_orgs, merge_by);
     let cache = &mut ANALYSIS_CACHE.lock().unwrap();
-    let analysis = get_analysis_object!(&fbas, cache);
+    let (analysis, cache_hit) = get_analysis_object!(&fbas, cache);
 
     let tt = maybe_merge!(analysis.top_tier(), &groupings);
 
@@ -158,6 +161,7 @@ pub fn analyze_top_tier(json_fbas: String, json_orgs: String, merge_by: MergeBy)
         top_tier_size: tt.len(),
         top_tier: tt.into_pretty_vec(&fbas, groupings.as_ref()),
         symmetric_top_tier: symm_tt,
+        cache_hit,
     };
     JsValue::from_serde(&results).unwrap()
 }
@@ -282,7 +286,7 @@ mod tests {
 
         let actual = JSON::stringify(&result).unwrap().as_string().unwrap();
 
-        let expected = "{\"top_tier\":[\"n0\",\"n1\",\"n2\",\"n3\"],\"top_tier_size\":4,\"symmetric_top_tier\":{\"threshold\":3,\"validators\":[\"n0\",\"n1\",\"n2\",\"n3\"]}}";
+        let expected = "{\"top_tier\":[\"n0\",\"n1\",\"n2\",\"n3\"],\"top_tier_size\":4,\"symmetric_top_tier\":{\"threshold\":3,\"validators\":[\"n0\",\"n1\",\"n2\",\"n3\"]},\"cache_hit\":false}";
 
         assert_eq!(expected, actual);
     }
