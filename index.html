@@ -122,7 +122,9 @@
       </script>
 
       <script type="module">
-        import init, {analyze_minimal_quorums, analyze_minimal_splitting_sets, analyze_minimal_blocking_sets, analyze_top_tier, init_panic_hook} from './pkg/stellar_analysis.js';
+        import init, { analyze_minimal_quorums, analyze_minimal_splitting_sets, analyze_minimal_blocking_sets,
+            analyze_top_tier, analyze_symmetric_top_tier,init_panic_hook
+        } from './pkg/stellar_analysis.js';
       async function initialise() {
         await init();
 		init_panic_hook();
@@ -148,6 +150,11 @@
       return results
     }
     window.run_tt = run_tt
+    async function run_symmetric_tt(fbas, orgs, should_merge) {
+      var results = analyze_symmetric_top_tier(fbas, orgs, should_merge)
+      return results
+    }
+    window.run_symmetric_tt = run_symmetric_tt
       </script>
 
       <h2>About</h2>

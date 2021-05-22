@@ -78,7 +78,8 @@ async function analyze_and_update_results_box() {
 
     console.log("tt analysis...");
 	let tt_res = await run_tt(fbas_from_stellarbeat, stellarbeat_orgs, should_merge);
-    var [tt, tt_len, symm_tt] = split_top_tier(tt_res);
+	let symm_tt_res = await run_symmetric_tt(fbas_from_stellarbeat, stellarbeat_orgs, should_merge);
+    var [tt, tt_len, symm_tt] = split_top_tier(tt_res, symm_tt_res);
     show_tt_results(tt, tt_len, symm_tt);
     await tick();
 
@@ -108,9 +109,9 @@ function split_results(result) {
     return [value, size, min];
 }
 
-function split_top_tier(result) {
-    var value = Object.values(result)[0];
-    var size = Object.values(result)[1];
-    var symm_top_tier = Object.values(result)[2];
+function split_top_tier(tt_result, symm_result) {
+    var value = Object.values(tt_result)[0];
+    var size = Object.values(tt_result)[1];
+    var symm_top_tier = Object.values(symm_result)[0];
     return [value, size, symm_top_tier];
 }

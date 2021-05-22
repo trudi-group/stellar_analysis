@@ -60,8 +60,12 @@ struct SetsReport {
 struct TopTierReport {
     top_tier: Vec<String>,
     top_tier_size: usize,
-    symmetric_top_tier: Option<PrettyQuorumSet>,
     cache_hit: bool,
+}
+
+#[derive(Serialize, Default)]
+struct SymmetricTopTierReport {
+    symmetric_top_tier: Option<PrettyQuorumSet>,
 }
 
 #[wasm_bindgen]
@@ -153,16 +157,30 @@ pub fn analyze_top_tier(json_fbas: String, json_orgs: String, merge_by: MergeBy)
 
     let tt = maybe_merge!(analysis.top_tier(), &groupings);
 
-    let symm_tt = analysis
-        .symmetric_top_tier()
-        .map(|qset| qset.into_pretty_quorum_set(&fbas, groupings.as_ref()));
-
     let results = TopTierReport {
         top_tier_size: tt.len(),
         top_tier: tt.into_pretty_vec(&fbas, groupings.as_ref()),
-        symmetric_top_tier: symm_tt,
         cache_hit,
     };
+    JsValue::from_serde(&results).unwrap()
+}
+
+#[wasm_bindgen]
+pub fn analyze_symmetric_top_tier(
+    json_fbas: String,
+    json_orgs: String,
+    merge_by: MergeBy,
+) -> JsValue {
+    let fbas: Fbas = Fbas::from_json_str(&json_fbas).to_standard_form();
+    let groupings = get_groupings_to_merge_by(&fbas, json_fbas, json_orgs, merge_by);
+    let cache = &mut ANALYSIS_CACHE.lock().unwrap();
+    let (analysis, _) = get_analysis_object!(&fbas, cache);
+
+    let symmetric_top_tier = analysis
+        .symmetric_top_tier()
+        .map(|qset| qset.into_pretty_quorum_set(&fbas, groupings.as_ref()));
+
+    let results = SymmetricTopTierReport { symmetric_top_tier };
     JsValue::from_serde(&results).unwrap()
 }
 
@@ -286,7 +304,23 @@ mod tests {
 
         let actual = JSON::stringify(&result).unwrap().as_string().unwrap();
 
-        let expected = "{\"top_tier\":[\"n0\",\"n1\",\"n2\",\"n3\"],\"top_tier_size\":4,\"symmetric_top_tier\":{\"threshold\":3,\"validators\":[\"n0\",\"n1\",\"n2\",\"n3\"]},\"cache_hit\":false}";
+        let expected =
+            "{\"top_tier\":[\"n0\",\"n1\",\"n2\",\"n3\"],\"top_tier_size\":4,\"cache_hit\":true}";
+
+        assert_eq!(expected, actual);
+    }
+
+    #[wasm_bindgen_test]
+    fn test_analyze_symmetric_top_tier() {
+        let result = analyze_symmetric_top_tier(
+            TEST_FBAS_JSON.clone(),
+            TEST_ORGS_JSON.clone(),
+            MergeBy::DoNotMerge,
+        );
+
+        let actual = JSON::stringify(&result).unwrap().as_string().unwrap();
+
+        let expected = "{\"symmetric_top_tier\":{\"threshold\":3,\"validators\":[\"n0\",\"n1\",\"n2\",\"n3\"]}}";
 
         assert_eq!(expected, actual);
     }
