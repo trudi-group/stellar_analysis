@@ -1,6 +1,9 @@
 function get_and_analyze_stellarbeat_data_via_button() {
 	var date = document.getElementById('date').value;
 	var time = document.getElementById('time').value;
+    if (!time.length) {
+        time = "00" + ":" + "00";
+    }
     get_and_analyze_stellarbeat_data(date, time);
 }
 
