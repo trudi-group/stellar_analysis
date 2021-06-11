@@ -46,9 +46,9 @@ function get_stellarbeat_data_promise(date, time) {
 
 function parse_stellarbeat_data(stellarbeat_data) {
 	var js_object = JSON.parse(stellarbeat_data);
-	stellarbeat_nodes = JSON.stringify(js_object[Object.keys(js_object)[0]]);
-    stellarbeat_orgs = JSON.stringify(js_object[Object.keys(js_object)[1]]);
-	stellarbeat_timestamp = JSON.stringify(js_object[Object.keys(js_object)[3]]).replace(/\"/g, "");
+    stellarbeat_nodes = JSON.stringify(js_object["nodes"]);
+    stellarbeat_orgs = JSON.stringify(js_object["organizations"]);
+    stellarbeat_timestamp = JSON.stringify(js_object["time"]);
 
 	fbas_from_stellarbeat = stellarbeat_nodes;
     current_nodes = fbas_from_stellarbeat;
