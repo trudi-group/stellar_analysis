@@ -200,9 +200,9 @@ fn get_groupings_to_merge_by(
     merge_by: MergeBy,
 ) -> Option<Groupings> {
     match merge_by {
-        MergeBy::Orgs => Some(Groupings::organizations_from_json_str(&json_orgs, &fbas)),
-        MergeBy::ISPs => Some(Groupings::isps_from_json_str(&json_fbas, &fbas)),
-        MergeBy::Countries => Some(Groupings::countries_from_json_str(&json_fbas, &fbas)),
+        MergeBy::Orgs => Some(Groupings::organizations_from_json_str(&json_orgs, fbas)),
+        MergeBy::ISPs => Some(Groupings::isps_from_json_str(&json_fbas, fbas)),
+        MergeBy::Countries => Some(Groupings::countries_from_json_str(&json_fbas, fbas)),
         MergeBy::DoNotMerge => None,
     }
 }
