@@ -1,6 +1,7 @@
 ## Running on a local Web Server
 
 [![CI](https://github.com/wiberlin/stellar_analysis/actions/workflows/test.yml/badge.svg)](https://github.com/wiberlin/stellar_analysis/actions/workflows/test.yml)
+[![dependency status](https://deps.rs/repo/github/wiberlin/stellar_analysis/status.svg)](https://deps.rs/repo/github/wiberlin/stellar_analysis)
 
 In this section we show how to run this tool using a local web server.
 
