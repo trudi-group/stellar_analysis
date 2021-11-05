@@ -31,7 +31,7 @@ function build_timestamp(date, time) {
 }
 
 function get_stellarbeat_data_promise(date, time) {
-    var url = "https://api.stellarbeat.io/v2/all?at=" + build_timestamp(date, time);
+    var url = "https://172.20.1.162:8000/v1/" + build_timestamp(date, time);
     console.log("Getting data from: ", url);
     return new Promise(function (resolve) {
         var xhr = new XMLHttpRequest();

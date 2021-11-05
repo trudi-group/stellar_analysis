@@ -22,6 +22,9 @@ h3 {
 p {
 	padding-left: 50px;
 }
+.disabled {
+	opacity: .5;
+}
 .control-box {
 	padding-left: 50px;
 }
