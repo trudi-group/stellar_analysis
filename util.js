@@ -177,7 +177,7 @@ function show_mbs_results(mbs, mbs_len, mbs_min) {
 function show_mss_results(mss, mss_len, mss_min) {
 	var mss_output = JSON.stringify(mss, null, 4);
 	var mss_tooltip = "Control over any of these sets is sufficient to compromise safety by undermining the quorum intersection of at least two quorums.";
-	create_buttons_in_div("splitting sets |", " We found "+ mss_len + " minimal blocking sets. The smallest one has size " + mss_min + ".", mss_output, mss_tooltip);
+	create_buttons_in_div("splitting sets |", " We found "+ mss_len + " minimal splitting sets. The smallest one has size " + mss_min + ".", mss_output, mss_tooltip);
 }
 
 function show_tt_results(tt, tt_len, symm_tt) {

@@ -79,7 +79,7 @@ pub enum MergeBy {
 
 #[wasm_bindgen]
 pub fn analyze_minimal_quorums(json_fbas: String, json_orgs: String, merge_by: MergeBy) -> JsValue {
-    let fbas = get_fbas(&json_fbas);
+    let fbas = get_filtered_standard_form_fbas(&json_fbas);
     let groupings = get_groupings_to_merge_by(&fbas, json_fbas, json_orgs, merge_by);
     let cache = &mut ANALYSIS_CACHE.lock().unwrap();
     let (analysis, _) = get_analysis_object!(&fbas, cache);
@@ -103,13 +103,12 @@ pub fn analyze_minimal_blocking_sets(
     faulty_nodes: String,
     merge_by: MergeBy,
 ) -> JsValue {
-    let fbas: Fbas = Fbas::from_json_str(&json_fbas).to_standard_form();
+    let fbas = get_filtered_standard_form_fbas(&json_fbas);
     let groupings = get_groupings_to_merge_by(&fbas, json_fbas, json_orgs, merge_by);
     let cache = &mut ANALYSIS_CACHE.lock().unwrap();
     let (analysis, _) = get_analysis_object!(&fbas, cache);
 
     let inactive_nodes: Vec<String> = serde_json::from_str(&faulty_nodes).unwrap();
-    let inactive_nodes: Vec<&str> = inactive_nodes.iter().map(|s| s.as_ref()).collect();
 
     let mbs_without_faulty_unmerged =
         analysis
@@ -132,7 +131,7 @@ pub fn analyze_minimal_splitting_sets(
     json_orgs: String,
     merge_by: MergeBy,
 ) -> JsValue {
-    let fbas: Fbas = Fbas::from_json_str(&json_fbas).to_standard_form();
+    let fbas = get_filtered_standard_form_fbas(&json_fbas);
     let groupings = get_groupings_to_merge_by(&fbas, json_fbas, json_orgs, merge_by);
     let cache = &mut ANALYSIS_CACHE.lock().unwrap();
     let (analysis, _) = get_analysis_object!(&fbas, cache);
@@ -150,7 +149,7 @@ pub fn analyze_minimal_splitting_sets(
 
 #[wasm_bindgen]
 pub fn analyze_top_tier(json_fbas: String, json_orgs: String, merge_by: MergeBy) -> JsValue {
-    let fbas: Fbas = Fbas::from_json_str(&json_fbas).to_standard_form();
+    let fbas = get_filtered_standard_form_fbas(&json_fbas);
     let groupings = get_groupings_to_merge_by(&fbas, json_fbas, json_orgs, merge_by);
     let cache = &mut ANALYSIS_CACHE.lock().unwrap();
     let (analysis, cache_hit) = get_analysis_object!(&fbas, cache);
@@ -171,7 +170,7 @@ pub fn analyze_symmetric_top_tier(
     json_orgs: String,
     merge_by: MergeBy,
 ) -> JsValue {
-    let fbas: Fbas = Fbas::from_json_str(&json_fbas).to_standard_form();
+    let fbas = get_filtered_standard_form_fbas(&json_fbas);
     let groupings = get_groupings_to_merge_by(&fbas, json_fbas, json_orgs, merge_by);
     let cache = &mut ANALYSIS_CACHE.lock().unwrap();
     let (analysis, _) = get_analysis_object!(&fbas, cache);
@@ -189,8 +188,12 @@ pub fn init_panic_hook() {
     console_error_panic_hook::set_once();
 }
 
-fn get_fbas(json_fbas: &str) -> Fbas {
-    Fbas::from_json_str(json_fbas).to_standard_form()
+fn get_filtered_standard_form_fbas(json_fbas: &str) -> Fbas {
+    let fbas = Fbas::from_json_str(json_fbas);
+    let inactive_nodes = FilteredNodes::from_json_str(json_fbas, |v| v["active"] == false);
+    let fbas = fbas.without_nodes_pretty(&inactive_nodes.into_pretty_vec());
+    let fbas = fbas.without_nodes(&fbas.one_node_quorums());
+    fbas.to_standard_form()
 }
 
 fn get_groupings_to_merge_by(
@@ -229,7 +232,16 @@ mod tests {
             },
             {
                 "publicKey": "n3",
-                "quorumSet": { "threshold": 3, "validators": ["n0", "n1", "n2", "n3"] }
+                "quorumSet": { "threshold": 3, "validators": ["n0", "n1", "n2", "n3", "n4"] }
+            },
+            {
+                "publicKey": "n4",
+                "quorumSet": { "threshold": 2, "validators": ["n3", "n4"] },
+                "active": false
+            },
+            {
+                "publicKey": "n5",
+                "quorumSet": { "threshold": 1, "validators": ["n5"] }
             }
         ]"#
         .to_string();

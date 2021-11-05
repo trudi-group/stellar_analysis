@@ -1,6 +1,6 @@
 [package]
 name = "stellar_analysis"
-version = "0.4.2"
+version = "0.5.0"
 authors = ["Charmaine Ndolo <Charmaine.Ndolo@hu-berlin.de>", "Martin Florian <martin.florian@hu-berlin.de>"]
 edition = "2018"
 
@@ -12,7 +12,7 @@ crate-type = ["cdylib", "rlib"]
 debug = true
 
 [dependencies]
-fbas_analyzer = { version = "0.5.4", default-features = false }
+fbas_analyzer = { version = "0.6", default-features = false }
 
 console_error_panic_hook = "0.1.1"
 yew = "0.18"
