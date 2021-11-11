@@ -154,7 +154,7 @@ function clear_results_box() {
 }
 
 function show_results_box_title(timestamp, stellarbeat_timestamp) {
-	create_title_in_div("Results for " + timestamp + " (data from Stellarbeat has timestamp " + stellarbeat_timestamp + ")");
+	create_title_in_div("Results for " + timestamp + " (crawl data has timestamp " + stellarbeat_timestamp + ")");
 }
 
 function show_mqs_results(mqs, mqs_len, has_quorum_intersection) {

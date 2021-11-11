@@ -48,7 +48,7 @@ function parse_stellarbeat_data(stellarbeat_data) {
 	var js_object = JSON.parse(stellarbeat_data);
     stellarbeat_nodes = JSON.stringify(js_object["nodes"]);
     stellarbeat_orgs = JSON.stringify(js_object["organizations"]);
-    stellarbeat_timestamp = JSON.stringify(js_object["time"]);
+    stellarbeat_timestamp = JSON.stringify(js_object["timestamp"]);
 
 	fbas_from_stellarbeat = stellarbeat_nodes;
     current_nodes = fbas_from_stellarbeat;
@@ -71,6 +71,10 @@ async function analyze_and_update_results_box() {
     clear_results_box();
     show_results_box_title(timestamp, stellarbeat_timestamp);
     await tick();
+
+    if (!stellarbeat_orgs) {
+      stellarbeat_orgs = [];
+    }
 
     console.log("mqs analysis...");
     let mqs_res = await run_mqs(fbas_from_stellarbeat, stellarbeat_orgs, should_merge);
