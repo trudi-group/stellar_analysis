@@ -2,16 +2,19 @@ function get_and_analyze_stellarbeat_data_via_button() {
 	var date = document.getElementById('date').value;
 	var time = document.getElementById('time').value;
     if (!time.length) {
-        time = "00" + ":" + "00";
+        time = "00:00:00";
+    } else if (time.length <= 5) {
+        time = time + ":00";
     }
     get_and_analyze_stellarbeat_data(date, time);
 }
 
-function get_and_analyze_stellarbeat_data_via_click(clicked_date) {
-    var date = clicked_date;
-	var time = "00" + ":" + "00";
-	document.getElementById('date').value = date;
-	document.getElementById('time').value = time;
+function get_and_analyze_stellarbeat_data_via_click(clicked_datetime) {
+    var datetime_parts = clicked_datetime.split('T');
+    var date = datetime_parts[0];
+    var time = datetime_parts[1];
+    document.getElementById('date').value = date;
+    document.getElementById('time').value = time;
     get_and_analyze_stellarbeat_data(date, time);
 }
 
@@ -27,11 +30,11 @@ function get_and_analyze_stellarbeat_data(date, time) {
 }
 
 function build_timestamp(date, time) {
-    return date + "T" + time;
+    return date + "T" + time + "Z";
 }
 
 function get_stellarbeat_data_promise(date, time) {
-    var url = "https://172.20.1.162:8000/v1/" + build_timestamp(date, time);
+    var url = "https://78.47.197.225:8000/v1/" + build_timestamp(date, time);
     console.log("Getting data from: ", url);
     return new Promise(function (resolve) {
         var xhr = new XMLHttpRequest();
