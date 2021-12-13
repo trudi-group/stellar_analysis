@@ -15,7 +15,7 @@ debug = true
 fbas_analyzer = { version = "0.6", default-features = false }
 
 console_error_panic_hook = "0.1.1"
-yew = "0.18"
+yew = "0.19"
 web-sys = "0.3"
 serde_json = "1.0"
 serde = "^1.0.59"
