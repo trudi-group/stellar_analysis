@@ -32,13 +32,14 @@
         <form name="merge">
           <input name="merge_box" id="no-merge" type="radio" value="none" checked onclick="determine_merge_selection(); maybe_change_analysis()">
           <label for="no-merge">Raw nodes (do not merge)</label>
-          <input name="merge_box" id="merge-orgs" type="radio" value="orgs" disabled onclick="determine_merge_selection(); maybe_change_analysis()">
-          <label for="merge-orgs" class="disabled">Organizations</label>
-          <input name="merge_box" id="merge-isps" type="radio" value="isps" disabled onclick="determine_merge_selection(); maybe_change_analysis()">
-          <label for="merge-isps" class="disabled">ISPs</label>
+          <input name="merge_box" id="merge-orgs" type="radio" value="orgs" onclick="determine_merge_selection(); maybe_change_analysis()">
+          <label for="merge-orgs">Organizations<small>*</small></label>
+          <input name="merge_box" id="merge-isps" type="radio" value="isps" onclick="determine_merge_selection(); maybe_change_analysis()">
+          <label for="merge-isps">ISPs<small>*</small></label>
           <input name="merge_box" id="merge-ctry" type="radio" value="ctry" onclick="determine_merge_selection(); maybe_change_analysis()">
           <label for="merge-ctry">Countries</label>
         </form>
+        <small>* These groupings are currently maintained manually and might be outdated.</small>
     </div>
 
     <h2>In-depth analysis of one snapshot</h2>
