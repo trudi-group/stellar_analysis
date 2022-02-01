@@ -46,7 +46,7 @@
 
     <p>
       Interactive analyses of the <a href="https://mobilecoin.com/">MobileCoin</a> Federated Byzantine Agreement System (FBAS) using <a href="https://github.com/wiberlin/fbas_analyzer"><code>fbas_analyzer</code></a> compiled to <a href="https://webassembly.org/">WebAssembly</a>.
-      The analyses are performed in your browser using <a href="https://github.com/wiberlin/mc-crawler">crawl</a> data downloaded on demand from our <a href="https://78.47.197.225:8000/v1/">database</a>.
+      The analyses are performed in your browser using <a href="https://github.com/wiberlin/mc-crawler">crawl</a> data downloaded on demand from our <a href="https://api.crawler.mc.trudi.group/v1/">database</a>.
       You can also trigger an analysis by clicking on the plot below.
     </p>
 
@@ -56,9 +56,6 @@
       <button id="submit-btn" type="button" onclick="get_and_analyze_stellarbeat_data_via_button()">
         Analyze!
       </button>
-      <small>
-        If nothing happens, you might need to visit our <a href="https://78.47.197.225:8000/v1/">API</a> and accept its certificate first. Sorry for that...
-      </small>
       <script>
       var last_merge_state = document.querySelector('input[name=merge_box]:checked').value;
       window.onload = function() {
