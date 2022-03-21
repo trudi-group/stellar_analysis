@@ -79,7 +79,7 @@ pub enum MergeBy {
 
 #[wasm_bindgen]
 pub fn analyze_minimal_quorums(json_fbas: String, json_orgs: String, merge_by: MergeBy) -> JsValue {
-    let fbas = get_filtered_standard_form_fbas(&json_fbas);
+    let fbas = get_filtered_standard_form_fbas_core(&json_fbas);
     let groupings = get_groupings_to_merge_by(&fbas, json_fbas, json_orgs, merge_by);
     let cache = &mut ANALYSIS_CACHE.lock().unwrap();
     let (analysis, _) = get_analysis_object!(&fbas, cache);
@@ -103,7 +103,7 @@ pub fn analyze_minimal_blocking_sets(
     faulty_nodes: String,
     merge_by: MergeBy,
 ) -> JsValue {
-    let fbas = get_filtered_standard_form_fbas(&json_fbas);
+    let fbas = get_filtered_standard_form_fbas_core(&json_fbas);
     let groupings = get_groupings_to_merge_by(&fbas, json_fbas, json_orgs, merge_by);
     let cache = &mut ANALYSIS_CACHE.lock().unwrap();
     let (analysis, _) = get_analysis_object!(&fbas, cache);
@@ -131,7 +131,7 @@ pub fn analyze_minimal_splitting_sets(
     json_orgs: String,
     merge_by: MergeBy,
 ) -> JsValue {
-    let fbas = get_filtered_standard_form_fbas(&json_fbas);
+    let fbas = get_filtered_standard_form_fbas_core(&json_fbas);
     let groupings = get_groupings_to_merge_by(&fbas, json_fbas, json_orgs, merge_by);
     let cache = &mut ANALYSIS_CACHE.lock().unwrap();
     let (analysis, _) = get_analysis_object!(&fbas, cache);
@@ -149,7 +149,7 @@ pub fn analyze_minimal_splitting_sets(
 
 #[wasm_bindgen]
 pub fn analyze_top_tier(json_fbas: String, json_orgs: String, merge_by: MergeBy) -> JsValue {
-    let fbas = get_filtered_standard_form_fbas(&json_fbas);
+    let fbas = get_filtered_standard_form_fbas_core(&json_fbas);
     let groupings = get_groupings_to_merge_by(&fbas, json_fbas, json_orgs, merge_by);
     let cache = &mut ANALYSIS_CACHE.lock().unwrap();
     let (analysis, cache_hit) = get_analysis_object!(&fbas, cache);
@@ -170,7 +170,7 @@ pub fn analyze_symmetric_top_tier(
     json_orgs: String,
     merge_by: MergeBy,
 ) -> JsValue {
-    let fbas = get_filtered_standard_form_fbas(&json_fbas);
+    let fbas = get_filtered_standard_form_fbas_core(&json_fbas);
     let groupings = get_groupings_to_merge_by(&fbas, json_fbas, json_orgs, merge_by);
     let cache = &mut ANALYSIS_CACHE.lock().unwrap();
     let (analysis, _) = get_analysis_object!(&fbas, cache);
@@ -188,11 +188,12 @@ pub fn init_panic_hook() {
     console_error_panic_hook::set_once();
 }
 
-fn get_filtered_standard_form_fbas(json_fbas: &str) -> Fbas {
+fn get_filtered_standard_form_fbas_core(json_fbas: &str) -> Fbas {
     let fbas = Fbas::from_json_str(json_fbas);
     let inactive_nodes = FilteredNodes::from_json_str(json_fbas, |v| v["active"] == false);
     let fbas = fbas.without_nodes_pretty(&inactive_nodes.into_pretty_vec());
     let fbas = fbas.without_nodes(&fbas.one_node_quorums());
+    let fbas = fbas.to_core();
     fbas.to_standard_form()
 }
 
