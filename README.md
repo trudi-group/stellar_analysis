@@ -42,7 +42,14 @@ This section covers how this tool can be deployed to your web server instead.
 
 ## Package managers
 
-- This tool is also now available on [npm](https://www.npmjs.com/package/stellar_analysis) and can be installed using
+1. Publish a new version to the npm registry:
+
+    1. `wasm-pack build`
+    2. `wasm-pack login`
+    3. `wasm-pack pack pkg/`
+    4. `wasm-pack publish`
+
+2. This tool is also available on [npm](https://www.npmjs.com/package/stellar_analysis) and can be installed using
 
 	`npm i stellar_analysis`
 
