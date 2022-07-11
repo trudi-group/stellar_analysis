@@ -10,9 +10,10 @@ function get_and_analyze_stellarbeat_data_via_button() {
 }
 
 function get_and_analyze_stellarbeat_data_via_click(clicked_datetime) {
-    var datetime_parts = clicked_datetime.split('T');
-    var date = datetime_parts[0];
-    var time = datetime_parts[1];
+    var date = clicked_datetime;
+    // crawls are started every full hour but take a few minutes to finish,
+    // hence +5min on the timestamp
+    var time = "00:05:00";
     document.getElementById('date').value = date;
     document.getElementById('time').value = time;
     get_and_analyze_stellarbeat_data(date, time);
