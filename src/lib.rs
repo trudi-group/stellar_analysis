@@ -190,8 +190,8 @@ pub fn init_panic_hook() {
 
 fn get_filtered_standard_form_fbas_core(json_fbas: &str) -> Fbas {
     let fbas = Fbas::from_json_str(json_fbas);
-    let inactive_nodes = FilteredNodes::from_json_str(json_fbas, |v| v["active"] == false);
-    let fbas = fbas.without_nodes_pretty(&inactive_nodes.into_pretty_vec());
+    //let inactive_nodes = FilteredNodes::from_json_str(json_fbas, |v| v["active"] == false);
+    //let fbas = fbas.without_nodes_pretty(&inactive_nodes.into_pretty_vec());
     let fbas = fbas.without_nodes(&fbas.one_node_quorums());
     let fbas = fbas.to_core();
     fbas.to_standard_form()
@@ -333,7 +333,7 @@ mod tests {
 
         let actual = JSON::stringify(&result).unwrap().as_string().unwrap();
 
-        let expected = "{\"symmetric_top_tier\":{\"threshold\":3,\"validators\":[\"n0\",\"n1\",\"n2\",\"n3\"]}}";
+        let expected = "{\"symmetric_top_tier\":null}";
 
         assert_eq!(expected, actual);
     }
